@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# skills
+.agents/
+.claude/
+skills-lock.json
+
+# pnpm (project uses npm)
+pnpm-lock.yaml
