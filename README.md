@@ -1,1 +1,1 @@
-A learning exercise for a multi-functional AI platform based on NextJS
+A Next.js learning application about Pokémon and AI
