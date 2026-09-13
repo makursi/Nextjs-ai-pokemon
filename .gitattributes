@@ -1,0 +1,4 @@
+# The formatter (oxfmt) enforces LF. With git's default Windows checkout
+# conversion, every fresh checkout would produce CRLF in the working tree and
+# `pnpm fmt:check` would fail until someone re-ran the formatter.
+* text=auto eol=lf

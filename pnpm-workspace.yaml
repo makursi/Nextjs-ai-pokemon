@@ -1,3 +1,30 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Build scripts pnpm is allowed to run on install.
 allowBuilds:
-  msw: true
-  sharp: true
+  simple-git-hooks: true
+
+# Shared toolchain versions. Packages reference these with the `catalog:` protocol.
+# `typescript` and `oxlint-tsgolint` are pinned exactly: tsgolint tracks a specific
+# TypeScript release (7.0.2001 <=> TS 7.0.2), so both must move together.
+catalog:
+  "@tailwindcss/postcss": ^4.3.3
+  "@types/node": ^24.13.4
+  "@types/react": ^19.3.0
+  "@types/react-dom": ^19.3.0
+  lint-staged: ^17.5.1
+  next: ^16.3.5
+  oxfmt: 0.67.0
+  oxlint: 1.82.0
+  oxlint-tsgolint: 7.0.2001
+  react: ^19.3.0
+  react-dom: ^19.3.0
+  simple-git-hooks: ^2.14.0
+  tailwindcss: ^4.3.3
+  turbo: 2.10.12
+  typescript: 7.0.2
+
+minimumReleaseAgeExclude:
+  - tailwind-merge@3.7.0

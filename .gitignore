@@ -1,49 +1,41 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+node_modules/
 
-# testing
-/coverage
+# build output
+.next/
+out/
+dist/
+build/
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
+# turborepo
+.turbo/
 
 # vercel
-.vercel
+.vercel/
+
+# env files (opt-in via .env.example)
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-# skills
+# os / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# agent tooling (kept out of git)
 .agents/
 .claude/
 skills-lock.json
-
-# pnpm (project uses npm)
-pnpm-lock.yaml
