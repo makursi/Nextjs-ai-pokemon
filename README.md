@@ -1,6 +1,6 @@
 # Toolbox
 
-A collection of single-purpose browser tools — cover image generator, image format conversion, and more to come. One site, one deploy.
+A collection of single-purpose browser tools — cover image generator, image format conversion, and more to come. One deployable, many tools.
 
 ## Prerequisites
 
@@ -17,7 +17,7 @@ pnpm dev        # http://localhost:3000
 ## Structure
 
 ```
-apps/web/     the site (Next.js App Router, Tailwind CSS v4, shadcn/ui)
+apps/web/     the App (Next.js App Router, Tailwind CSS v4, shadcn/ui)
 packages/     code shared between workspace packages
 docs/adr/     decisions that are hard to reverse
 CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
@@ -27,7 +27,7 @@ CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
 
 | Command          | Purpose                        |
 | ---------------- | ------------------------------ |
-| `pnpm dev`       | run the site                   |
+| `pnpm dev`       | run apps/web                   |
 | `pnpm build`     | production build               |
 | `pnpm lint`      | Oxlint, type-aware             |
 | `pnpm typecheck` | `tsc --noEmit`                 |
@@ -39,7 +39,7 @@ CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
 
 1. `apps/web/src/tools/<slug>/` — the implementation plus a `meta.ts` exporting its `ToolMeta`.
 2. `apps/web/src/app/tools/<slug>/page.tsx` — the route: a thin adapter that renders the tool.
-3. `apps/web/src/tools/registry.ts` — add the tool's meta to the list.
+3. `apps/web/src/tools/registry.ts` — add the Tool to the Tool Registry.
 
 Tool logic stays in `src/tools/*` so it is testable without Next and can be moved to `packages/*` later, once a second consumer actually needs it.
 

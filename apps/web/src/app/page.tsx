@@ -1,5 +1,7 @@
+import Link from "next/link";
+
 import { siteDescription, siteName } from "@/lib/site";
-import { tools } from "@/tools/registry";
+import { toolPath, tools } from "@/tools/registry";
 
 export default function HomePage() {
   return (
@@ -13,13 +15,13 @@ export default function HomePage() {
         <ul className="mt-10 grid gap-4 sm:grid-cols-2">
           {tools.map((tool) => (
             <li key={tool.slug}>
-              <a
+              <Link
                 className="block rounded-lg border p-4 hover:border-foreground/20"
-                href={`/tools/${tool.slug}`}
+                href={toolPath(tool.slug)}
               >
                 <span className="font-medium">{tool.title}</span>
                 <span className="mt-1 block text-sm text-muted-foreground">{tool.description}</span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>
