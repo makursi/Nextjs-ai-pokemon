@@ -23,26 +23,26 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Layout
 
-- `apps/web` — the only App. Routes in `src/app`, tool implementations in `src/tools`, tool list in `src/tools/registry.ts`.
+- `apps/web` — the only App. Routes in `src/app`, Tool implementations in `src/tools`, the Tool Registry in `src/tools/registry.ts`.
 - `packages/tsconfig` — the only Package: shared TypeScript config, no runtime code.
 - `docs/adr` — decisions worth not re-litigating, and `CONTEXT.md` — the vocabulary.
 
 ## Conventions
 
-- **Root scripts only delegate.** Root `package.json` runs `turbo run <task>`; the actual task commands live in each package. Never put task logic in the root.
+- **Root scripts only delegate.** Root `package.json` runs `turbo run <task>`; the actual task commands live in each package. Never put task logic in the root. The one exception is repo-level tooling that belongs to no package: `fmt` and `fmt:check` run Oxfmt across the whole repository, which has no parallel or caching benefit as a task.
 - **A Tool is not a Package.** No `packages/<tool-name>`. Shared code moves to `packages/*` when a second consumer reuses it, and Tool metadata lives beside its implementation.
 - **Toolchain is Oxlint + Oxfmt.** There is no ESLint, Prettier or Biome anywhere; do not add configuration for them. Lint config is a root baseline (`.oxlintrc.json`) plus small per-package files that `extends` it — only `rules`, `plugins` and `overrides` are inheritable, so `env`, `settings` and `ignorePatterns` stay per package.
-- **Type-aware linting runs from package scripts** (`oxlint --type-aware`), never from `lint-staged`, which only runs `oxlint --fix` on staged files.
+- **Type-aware linting runs from package scripts** (`oxlint --type-aware`), never from `lint-staged`, which runs only `oxfmt` and a non-type-aware `oxlint --fix` on staged files.
 - **Types are checked by `tsc`**, not by Oxlint's `--type-check` (still experimental).
-- **Server-only values** such as `SITE_URL` are read in server components and route metadata, never inlined into client code.
-- **Catalog versions.** Dependencies shared across packages use the `catalog:` protocol; `typescript` and `oxlint-tsgolint` are pinned exactly because tsgolint tracks one TypeScript release.
+- **Server-only values** such as `SITE_URL` are read in server components and route metadata, never inlined into client code. `SITE_URL` is declared in the build task's `env` _and_ `.env*` is in its `inputs`, so a changed `.env.local` cannot be served a cached build with a stale origin.
+- **Catalog versions.** The catalog holds versions shared by more than one package plus the repo toolchain; single-consumer dependencies use literal ranges in their own `package.json`. `typescript` and `oxlint-tsgolint` are pinned exactly because tsgolint tracks one TypeScript release.
 - Commits are English, conventional commits.
 
 ## Agent skills
 
 ### Issue tracker
 
-Issues and specs live as GitHub issues on `makursi/Nextjs-ai-pokemon`, driven by the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues and specs live as GitHub issues, driven by the `gh` CLI (it infers the repo from `git remote`). See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

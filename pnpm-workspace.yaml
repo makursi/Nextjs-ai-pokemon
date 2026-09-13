@@ -6,7 +6,10 @@ packages:
 allowBuilds:
   simple-git-hooks: true
 
-# Shared toolchain versions. Packages reference these with the `catalog:` protocol.
+# Versions shared by more than one package, plus the repo toolchain, live here.
+# Packages reference them with the `catalog:` protocol; single-consumer
+# dependencies use literal ranges in their own package.json.
+#
 # `typescript` and `oxlint-tsgolint` are pinned exactly: tsgolint tracks a specific
 # TypeScript release (7.0.2001 <=> TS 7.0.2), so both must move together.
 catalog:
@@ -26,5 +29,11 @@ catalog:
   turbo: 2.10.12
   typescript: 7.0.2
 
+# pnpm's minimum-release-age supply-chain policy rejects versions published
+# inside its cutoff window. tailwind-merge 3.7.0 was roughly ten hours old when
+# this workspace was created, so pnpm wrote this exclusion itself. Keep it: a
+# caret range would resolve straight back into the freshly published version and
+# fail the policy again. It becomes a no-op once the release ages past the
+# cutoff, and can then be deleted.
 minimumReleaseAgeExclude:
   - tailwind-merge@3.7.0

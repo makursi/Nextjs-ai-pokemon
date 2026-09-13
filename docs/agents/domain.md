@@ -18,9 +18,11 @@ Single-context repo (most repos):
 /
 ├── CONTEXT.md
 ├── docs/adr/
-│   ├── 0001-event-sourced-orders.md
-│   └── 0002-postgres-for-write-model.md
-└── src/
+│   ├── 0001-monorepo-single-site.md
+│   └── 0002-oxlint-oxfmt-over-eslint-prettier.md
+└── apps/
+    └── web/
+        └── src/
 ```
 
 Multi-context repo (presence of `CONTEXT-MAP.md` at the root):
