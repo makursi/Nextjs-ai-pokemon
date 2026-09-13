@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same ref makes a running job obsolete.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: format, lint, types, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs pnpm (from `packageManager`) plus a Node.js runtime, then runs
+      # `pnpm install`. The runtime must be spelled out: this repository has no
+      # `devEngines.runtime` for the action to read, and pnpm's own binary does
+      # not bring Node.js with it — every step below needs it on PATH.
+      # CI matches local development on Node 24; `engines` only sets the floor.
+      - uses: pnpm/setup@v2
+        with:
+          runtime: node@24
+          cache: true
+
+      # Whole-repository format check, not a Turborepo task — see ADR 0002.
+      - name: Format
+        run: pnpm fmt:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build

@@ -35,6 +35,10 @@ CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
 | `pnpm fmt:check` | verify formatting (CI)         |
 | `pnpm test`      | test task (no test runner yet) |
 
+## CI
+
+`.github/workflows/ci.yml` runs `fmt:check`, `lint`, `typecheck` and `build` on every push to `main` and every pull request. The pre-push hook covers only `lint` and `typecheck`.
+
 ## Adding a tool
 
 1. `apps/web/src/tools/<slug>/` — the implementation plus a `meta.ts` exporting its `ToolMeta`.
