@@ -8,6 +8,7 @@
     "dev": "next dev",
     "start": "next start",
     "lint": "oxlint --type-aware",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -28,6 +29,8 @@
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "tailwindcss": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

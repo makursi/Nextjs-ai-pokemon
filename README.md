@@ -25,19 +25,19 @@ CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
 
 ## Commands
 
-| Command          | Purpose                        |
-| ---------------- | ------------------------------ |
-| `pnpm dev`       | run apps/web                   |
-| `pnpm build`     | production build               |
-| `pnpm lint`      | Oxlint, type-aware             |
-| `pnpm typecheck` | `tsc --noEmit`                 |
-| `pnpm fmt`       | format everything with Oxfmt   |
-| `pnpm fmt:check` | verify formatting (CI)         |
-| `pnpm test`      | test task (no test runner yet) |
+| Command          | Purpose                      |
+| ---------------- | ---------------------------- |
+| `pnpm dev`       | run apps/web                 |
+| `pnpm build`     | production build             |
+| `pnpm lint`      | Oxlint, type-aware           |
+| `pnpm typecheck` | `tsc --noEmit`               |
+| `pnpm fmt`       | format everything with Oxfmt |
+| `pnpm fmt:check` | verify formatting (CI)       |
+| `pnpm test`      | Vitest unit tests            |
 
 ## CI
 
-`.github/workflows/ci.yml` runs `fmt:check`, `lint`, `typecheck` and `build` on every push to `main` and every pull request. The pre-push hook covers only `lint` and `typecheck`.
+`.github/workflows/ci.yml` runs `fmt:check`, `lint`, `typecheck`, `test` and `build` on every push to `main` and every pull request. The pre-push hook covers only `lint` and `typecheck`.
 
 ## Adding a tool
 
@@ -46,6 +46,8 @@ CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
 3. `apps/web/src/tools/registry.ts` — add the Tool to the Tool Registry.
 
 Tool logic stays in `src/tools/*` so it is testable without Next and can be moved to `packages/*` later, once a second consumer actually needs it.
+
+Tests sit beside the code as `<file>.test.ts`. `pnpm test` runs them in Vitest's Node environment, with `@/*` resolving — see `docs/adr/0003-vitest-for-unit-tests.md`.
 
 ## Environment
 
