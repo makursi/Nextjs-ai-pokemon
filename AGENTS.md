@@ -1,5 +1,53 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
+
+# AGENTS.md
+
+`toolbox` is a pnpm + Turborepo monorepo. Its single deployable is `apps/web`, a Next.js site made of single-purpose browser tools.
+
+## Commands
+
+| Command          | Purpose                                  |
+| ---------------- | ---------------------------------------- |
+| `pnpm dev`       | run the site via `turbo run dev`         |
+| `pnpm build`     | production build                         |
+| `pnpm lint`      | `oxlint --type-aware` per package        |
+| `pnpm lint:fix`  | same, with `--fix`                       |
+| `pnpm typecheck` | `tsc --noEmit` per package               |
+| `pnpm test`      | test task (no test runner installed yet) |
+| `pnpm fmt`       | format the repo with Oxfmt               |
+
+## Layout
+
+- `apps/web` — the only App. Routes in `src/app`, tool implementations in `src/tools`, tool list in `src/tools/registry.ts`.
+- `packages/tsconfig` — the only Package: shared TypeScript config, no runtime code.
+- `docs/adr` — decisions worth not re-litigating, and `CONTEXT.md` — the vocabulary.
+
+## Conventions
+
+- **Root scripts only delegate.** Root `package.json` runs `turbo run <task>`; the actual task commands live in each package. Never put task logic in the root.
+- **A Tool is not a Package.** No `packages/<tool-name>`. Shared code moves to `packages/*` when a second consumer reuses it, and Tool metadata lives beside its implementation.
+- **Toolchain is Oxlint + Oxfmt.** There is no ESLint, Prettier or Biome anywhere; do not add configuration for them. Lint config is a root baseline (`.oxlintrc.json`) plus small per-package files that `extends` it — only `rules`, `plugins` and `overrides` are inheritable, so `env`, `settings` and `ignorePatterns` stay per package.
+- **Type-aware linting runs from package scripts** (`oxlint --type-aware`), never from `lint-staged`, which only runs `oxlint --fix` on staged files.
+- **Types are checked by `tsc`**, not by Oxlint's `--type-check` (still experimental).
+- **Server-only values** such as `SITE_URL` are read in server components and route metadata, never inlined into client code.
+- **Catalog versions.** Dependencies shared across packages use the `catalog:` protocol; `typescript` and `oxlint-tsgolint` are pinned exactly because tsgolint tracks one TypeScript release.
+- Commits are English, conventional commits.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live as GitHub issues on `makursi/Nextjs-ai-pokemon`, driven by the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five canonical triage roles map 1:1 to `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` at the repo root plus `docs/adr/`. See `docs/agents/domain.md`.
