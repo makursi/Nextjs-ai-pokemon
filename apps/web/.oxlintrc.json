@@ -1,0 +1,12 @@
+{
+  "extends": ["../../.oxlintrc.json"],
+  "plugins": ["nextjs", "react", "jsx-a11y"],
+  "env": {
+    "browser": true
+  },
+  "rules": {
+    // Obsolete with the automatic JSX runtime (React 17+).
+    "react/react-in-jsx-scope": "off"
+  },
+  "ignorePatterns": [".next", "node_modules", "next-env.d.ts"]
+}
