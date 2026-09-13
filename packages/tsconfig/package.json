@@ -1,0 +1,13 @@
+{
+  "name": "@toolbox/tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "base.json",
+    "next.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./next.json": "./next.json"
+  }
+}
