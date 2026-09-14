@@ -132,9 +132,9 @@ export function ImageConverter() {
       const format = sniffFormat(head);
 
       if (format === null) {
-        refused.push({ name: file.name, message: "This file's format could not be recognised." });
+        refused.push({ name: file.name, message: "无法识别这个文件的格式。" });
       } else if (format === "heic") {
-        refused.push({ name: file.name, message: "HEIC files are not supported yet." });
+        refused.push({ name: file.name, message: "暂不支持 HEIC 文件。" });
       } else {
         accepted.push(file);
       }
@@ -209,7 +209,7 @@ export function ImageConverter() {
     <Stack className="mt-10 sm:mt-12" gap="xl">
       <section>
         <Title order={2} size="h4">
-          1. Add images
+          1. 添加图片
         </Title>
 
         {/*
@@ -242,18 +242,18 @@ export function ImageConverter() {
             >
               {(props) => (
                 <Button {...props} variant="default">
-                  Choose files
+                  选择文件
                 </Button>
               )}
             </FileButton>
             <Text c="dimmed" size="sm">
-              or drop them here
+              也可以把文件拖到这里
             </Text>
           </Stack>
         </Dropzone>
 
         <Text c="dimmed" mt="xs" size="xs">
-          PNG, JPEG, WebP, AVIF or BMP. Nothing is uploaded; the files stay in this tab.
+          支持 PNG、JPEG、WebP、AVIF 与 BMP。文件不会上传，全程只在这个标签页里完成。
         </Text>
 
         {files.length > 0 && (
@@ -265,7 +265,7 @@ export function ImageConverter() {
                     {file.name}
                   </Text>
                   <CloseButton
-                    aria-label={`Remove ${file.name}`}
+                    aria-label={`移除 ${file.name}`}
                     disabled={running}
                     onClick={() => setFiles((previous) => previous.filter((_, at) => at !== index))}
                   />
@@ -276,7 +276,7 @@ export function ImageConverter() {
         )}
 
         {rejected.length > 0 && (
-          <Alert color="red" mt="md" title="Some files were not added">
+          <Alert color="red" mt="md" title="有文件没能加入">
             <Stack gap={4}>
               {rejected.map((entry) => (
                 <Text key={entry.name} size="sm">
@@ -293,7 +293,7 @@ export function ImageConverter() {
 
       <section>
         <Title order={2} size="h4">
-          2. Convert to
+          2. 转换为
         </Title>
 
         <Stack gap="md" mt="sm">
@@ -318,7 +318,7 @@ export function ImageConverter() {
                       <Switch
                         checked={state.lossless}
                         disabled={running}
-                        label="Lossless"
+                        label="无损"
                         onChange={(event) =>
                           updateTarget(format, { lossless: event.currentTarget.checked })
                         }
@@ -328,7 +328,7 @@ export function ImageConverter() {
                     {spec.lossless !== "always" && (
                       <div>
                         <Text fw={500} size="sm">
-                          Quality: {state.quality}
+                          质量：{state.quality}
                         </Text>
                         <Slider
                           disabled={running || state.lossless}
@@ -336,7 +336,7 @@ export function ImageConverter() {
                           min={1}
                           mt="xs"
                           onChange={(value) => updateTarget(format, { quality: value })}
-                          thumbLabel={`${spec.label} quality`}
+                          thumbLabel={`${spec.label} 质量`}
                           value={state.quality}
                         />
                       </div>
@@ -360,17 +360,17 @@ export function ImageConverter() {
 
       <section>
         <Title order={2} size="h4">
-          3. Output
+          3. 输出设置
         </Title>
 
         <SimpleGrid cols={{ base: 1, sm: 3 }} mt="sm">
           <NumberInput
-            description="Leave empty to keep the source size."
+            description="留空表示保持原尺寸。"
             disabled={running}
-            label="Longest edge (px)"
+            label="最长边（像素）"
             min={16}
             onChange={(value) => setMaxEdge(typeof value === "number" ? String(value) : value)}
-            placeholder="Keep original"
+            placeholder="保持原图"
             value={maxEdge}
           />
 
@@ -378,16 +378,16 @@ export function ImageConverter() {
             allowDeselect={false}
             data={rotationOptions}
             disabled={running}
-            label="Rotate"
+            label="旋转"
             onChange={(value) => setRotate(parseRotation(value ?? "0"))}
             value={String(rotate)}
           />
 
           <ColorInput
-            description="Fills transparent pixels for formats without alpha."
+            description="为不支持透明通道的格式填充透明像素。"
             disabled={running || !flattening}
             format="hex"
-            label="Background"
+            label="背景色"
             onChange={setBackground}
             value={background}
           />
@@ -399,11 +399,11 @@ export function ImageConverter() {
           disabled={running || files.length === 0 || enabledTargets.length === 0}
           onClick={() => void start()}
         >
-          Convert {files.length > 0 && `${files.length} file${files.length === 1 ? "" : "s"}`}
+          {files.length > 0 ? `转换 ${files.length} 个文件` : "转换"}
         </Button>
         {running && (
           <Button onClick={cancel} variant="default">
-            Cancel
+            取消
           </Button>
         )}
       </Group>
@@ -412,14 +412,14 @@ export function ImageConverter() {
         {planned.length > 0 && (
           <div>
             <Text size="sm">
-              {outcomes.length} of {planned.length} conversions done
+              已完成 {outcomes.length} / {planned.length}
             </Text>
             <Progress mt="xs" value={(outcomes.length / planned.length) * 100} />
           </div>
         )}
 
         {failures.length > 0 && (
-          <Alert color="red" mt="md" title="Some conversions failed">
+          <Alert color="red" mt="md" title="有转换失败">
             <Stack gap={4}>
               {failures.map((failure) => (
                 <Text key={failure.conversion.id} size="sm">
@@ -437,13 +437,13 @@ export function ImageConverter() {
           <Stack gap="sm" mt="xl">
             <Group justify="space-between">
               <Title order={2} size="h4">
-                4. Download
+                4. 下载
               </Title>
               <Button
                 onClick={() => saveBlob(zipConversions(succeeded), "converted-images.zip")}
                 variant="default"
               >
-                Download all as ZIP
+                打包成 ZIP 下载
               </Button>
             </Group>
 
@@ -503,7 +503,7 @@ function AdvancedPanel({
       >
         <Text fw={500} size="sm">
           <span aria-hidden="true">{expanded ? "− " : "+ "}</span>
-          Advanced
+          高级选项
         </Text>
       </UnstyledButton>
 
@@ -551,7 +551,7 @@ function DownloadLink({ outcome }: { outcome: Extract<Outcome, { ok: true }> }) 
 
   return (
     <Anchor download={outcome.conversion.outputName} href={url} size="sm">
-      Download
+      下载
     </Anchor>
   );
 }

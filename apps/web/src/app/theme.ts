@@ -25,6 +25,25 @@ const darkText = "#edebe8";
 const darkDimmed = "#a5a19a";
 const darkHairline = "#313030";
 
+/**
+ * Geist covers Latin; the Chinese copy needs a CJK fallback behind it.
+ *
+ * Nothing is downloaded for this: the CJK fonts are the ones the operating
+ * system already has, so the Chinese text renders in PingFang on macOS, YaHei on
+ * Windows and Noto on Linux. Self-hosting a CJK font would make the two machines
+ * agree, at the cost of megabytes, so it stays a documented option rather than a
+ * default (see `docs/design.md`).
+ */
+const sansStack = [
+  "var(--font-geist-sans)",
+  "'PingFang SC'",
+  "'Hiragino Sans GB'",
+  "'Microsoft YaHei'",
+  "'Noto Sans CJK SC'",
+  "system-ui",
+  "sans-serif",
+].join(", ");
+
 export const theme = createTheme({
   colors: {
     // Used for primary buttons, checked controls and the slider. Shade 9 is the
@@ -46,10 +65,10 @@ export const theme = createTheme({
   // Filled controls read as ink-on-paper in light and paper-on-ink in dark.
   primaryShade: { light: 9, dark: 0 },
   defaultRadius: "md",
-  fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+  fontFamily: sansStack,
   fontFamilyMonospace: "var(--font-geist-mono), ui-monospace, monospace",
   headings: {
-    fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+    fontFamily: sansStack,
     fontWeight: "600",
   },
   components: {
@@ -63,7 +82,8 @@ export const theme = createTheme({
  * rather than fought with in a stylesheet. */
 export const cssVariables: CSSVariablesResolver = () => ({
   variables: {
-    "--mantine-line-height": "1.6",
+    // 1.7 rather than 1.6: Chinese needs more leading than Latin at the same size.
+    "--mantine-line-height": "1.7",
     "--mantine-webkit-font-smoothing": "antialiased",
     "--mantine-moz-font-smoothing": "grayscale",
   },
