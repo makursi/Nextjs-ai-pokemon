@@ -47,7 +47,7 @@ CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
 
 Tool logic stays in `src/tools/*` so it is testable without Next and can be moved to `packages/*` later, once a second consumer actually needs it.
 
-Tests sit beside the code as `<file>.test.ts`. `pnpm test` runs them in Vitest's Node environment, with `@/*` resolving — see `docs/adr/0003-vitest-for-unit-tests.md`.
+Tests live in a `__tests__` directory beside the code they cover, named `<file>.test.ts`. `pnpm test` runs them in Vitest's Node environment, with `@/*` resolving — see `docs/adr/0003-vitest-for-unit-tests.md`.
 
 ## Constraints
 

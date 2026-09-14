@@ -6,6 +6,9 @@ import { defineConfig } from "vitest/config";
  * Unit tests for Tool logic and shared helpers only, in a Node environment —
  * no Next runtime, no DOM. A Tool that needs browser APIs is tested through
  * its pure parts; see `docs/adr/0003-vitest-for-unit-tests.md`.
+ *
+ * Tests live in a `__tests__` directory beside what they cover, and keep the
+ * `*.test.ts` name, so the glob below finds them wherever that directory is.
  */
 export default defineConfig({
   resolve: {
