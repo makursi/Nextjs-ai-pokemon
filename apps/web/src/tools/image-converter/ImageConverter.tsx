@@ -20,6 +20,7 @@ import {
   Switch,
   Text,
   Title,
+  UnstyledButton,
 } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -205,7 +206,7 @@ export function ImageConverter() {
   const failures = outcomes.flatMap((outcome) => (outcome.ok ? [] : [outcome]));
 
   return (
-    <Stack gap="xl" mt="xl">
+    <Stack className="mt-10 sm:mt-12" gap="xl">
       <section>
         <Title order={2} size="h4">
           1. Add images
@@ -252,7 +253,7 @@ export function ImageConverter() {
         </Dropzone>
 
         <Text c="dimmed" mt="xs" size="xs">
-          PNG, JPEG, WebP, AVIF or BMP. Nothing is uploaded — the files stay in this tab.
+          PNG, JPEG, WebP, AVIF or BMP. Nothing is uploaded; the files stay in this tab.
         </Text>
 
         {files.length > 0 && (
@@ -301,7 +302,7 @@ export function ImageConverter() {
             const state = targets[format];
 
             return (
-              <Paper key={format} p="md" withBorder>
+              <Paper key={format} p="lg" withBorder>
                 <Checkbox
                   checked={state.enabled}
                   disabled={running}
@@ -489,14 +490,22 @@ function AdvancedPanel({
 
   return (
     <div>
-      <Button
+      {/*
+        A glyph rather than an icon: a disclosure whose only job is to show state
+        does not need an icon dependency, and the reference convention for these
+        is a sharp + and -. The glyph is hidden from assistive tech because
+        `aria-expanded` already carries the state.
+      */}
+      <UnstyledButton
         aria-expanded={expanded}
         onClick={() => setExpanded((open) => !open)}
-        size="compact-sm"
-        variant="subtle"
+        style={{ borderRadius: "var(--mantine-radius-sm)", padding: "2px 6px" }}
       >
-        Advanced
-      </Button>
+        <Text fw={500} size="sm">
+          <span aria-hidden="true">{expanded ? "− " : "+ "}</span>
+          Advanced
+        </Text>
+      </UnstyledButton>
 
       <Collapse expanded={expanded} keepMounted={false}>
         <Stack gap="sm" mt="sm">

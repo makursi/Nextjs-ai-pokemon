@@ -22,4 +22,15 @@ describe("Tool Registry", () => {
   it("builds the route from the slug", () => {
     expect(toolPath("image-converter")).toBe("/tools/image-converter");
   });
+
+  it("keeps every cover a same-origin image path", () => {
+    // A remote URL here would be blocked by the CSP in next.config.ts, and a
+    // broken path would render as an empty frame rather than a missing image.
+    for (const tool of tools) {
+      if (tool.cover === undefined) continue;
+      expect(tool.cover, tool.title).toMatch(
+        /^\/[\w.-]+(?:\/[\w.-]+)*\.(?:avif|jpe?g|png|svg|webp)$/,
+      );
+    }
+  });
 });

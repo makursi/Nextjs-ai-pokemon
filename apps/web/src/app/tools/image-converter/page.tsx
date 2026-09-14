@@ -11,10 +11,12 @@ export const metadata: Metadata = {
 
 export default function ImageConverterPage() {
   return (
-    <Container size="md" py="xl">
-      <Stack gap="xs">
+    <Container className="py-10 sm:py-16" size="md">
+      <Stack className="reveal" gap="xs">
         <Title order={1}>{meta.title}</Title>
-        <Text c="dimmed">{meta.description}</Text>
+        <Text c="dimmed" maw={560}>
+          {meta.description}
+        </Text>
       </Stack>
 
       <ImageConverter />
