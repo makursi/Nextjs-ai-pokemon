@@ -13,7 +13,8 @@ The trade: Mantine is a larger dependency than copying a handful of components, 
 - `next.config.ts` sets `experimental.optimizePackageImports` for `@mantine/core` and `@mantine/hooks`, which is the tree-shaking hint Mantine's Next.js guide asks for.
 - `postcss-preset-mantine` is **not** installed. It exists to give _our own_ CSS modules Mantine's mixins and breakpoint variables; this repo writes no Mantine CSS modules, so it would be configuration with nothing behind it. It becomes necessary the first time a Tool ships a `*.module.css` using Mantine's mixins.
 - Mantine's default font is a system stack and its design tokens are emitted as CSS variables by `MantineProvider`, so nothing is fetched from a third-party host — `docs/adr/0005-no-outbound-requests.md` still holds.
-- Tailwind stays, as the utility layer the docs describe combining with Mantine (`classNames={{ input: 'mt-4' }}`) and as what the page shells are written in. The `tailwind-merge`/`clsx` pair and the custom colour tokens went with shadcn; Tailwind's own palette and utilities did not.
+- The toolbar's sliders and the file drop zone are the two places where the library's own accessibility needed help: `Slider`'s accessible name comes from `thumbLabel` (`thumbProps` is dropped by the thumb component), and the `Dropzone` root is called a presentation element by react-dropzone, so it is given `role="button"` and a label. Both would otherwise be quietly unnamed to a screen reader.
+- Tailwind stays, as the utility layer the docs describe combining with Mantine (`classNames={{ input: 'mt-4' }}`), and as an escape hatch for the few places where a utility reads better than a prop. The `tailwind-merge`/`clsx` pair and shadcn's colour tokens went with shadcn; Tailwind's own palette and utilities did not.
 
 ## Considered Options
 

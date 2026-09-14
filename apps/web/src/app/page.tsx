@@ -19,22 +19,23 @@ export default function HomePage() {
       ) : (
         <SimpleGrid cols={{ base: 1, sm: 2 }} mt="xl">
           {tools.map((tool) => (
-            <Card key={tool.slug} padding="md" withBorder>
+            <Link className="block" href={toolPath(tool.slug)} key={tool.slug}>
               {/*
-                `next/link` stays the element that navigates — this page is a
-                Server Component, and handing Mantine's polymorphic `component`
-                prop a function across that boundary is not allowed. The Anchor
-                is only here for its styling.
+                The Link wraps the Card rather than sitting inside it, so the
+                whole card is the click target. Mantine's polymorphic
+                `component` prop would be the other way to do this, but it cannot
+                be handed a function across the Server Component boundary — the
+                build rejects it.
               */}
-              <Link href={toolPath(tool.slug)}>
-                <Anchor component="span" fw={500} underline="never">
+              <Card padding="md" withBorder>
+                <Anchor component="span" fw={500} underline="hover">
                   {tool.title}
                 </Anchor>
-              </Link>
-              <Text c="dimmed" mt={4} size="sm">
-                {tool.description}
-              </Text>
-            </Card>
+                <Text c="dimmed" mt={4} size="sm">
+                  {tool.description}
+                </Text>
+              </Card>
+            </Link>
           ))}
         </SimpleGrid>
       )}

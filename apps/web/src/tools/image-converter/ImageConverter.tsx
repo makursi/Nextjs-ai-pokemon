@@ -8,6 +8,7 @@ import {
   CloseButton,
   Collapse,
   ColorInput,
+  FileButton,
   Group,
   NumberInput,
   Paper,
@@ -213,9 +214,18 @@ export function ImageConverter() {
         {/*
           No `accept` prop on purpose: it filters by the file's declared type, and
           a renamed file is exactly what `sniffFormat` is here to catch.
+
+          The drop zone is only the drag target. Clicking and the keyboard go
+          through the FileButton inside it: that is a real `<button>`, so it is
+          announced as one, whereas react-dropzone labels its own root
+          `role="presentation"` — making that the control would mean overriding
+          the role by hand, which is the thing jsx-a11y exists to stop.
         */}
         <Dropzone
+          activateOnClick={false}
+          activateOnKeyboard={false}
           disabled={running}
+          enablePointerEvents
           mt="sm"
           multiple
           onDrop={(dropped) => {
@@ -223,8 +233,18 @@ export function ImageConverter() {
           }}
           p="lg"
         >
-          <Stack align="center" gap={4} style={{ pointerEvents: "none" }}>
-            <Text fw={500}>Choose files</Text>
+          <Stack align="center" gap="sm">
+            <FileButton
+              disabled={running}
+              multiple
+              onChange={(picked) => void addFiles(toFiles(picked))}
+            >
+              {(props) => (
+                <Button {...props} variant="default">
+                  Choose files
+                </Button>
+              )}
+            </FileButton>
             <Text c="dimmed" size="sm">
               or drop them here
             </Text>
@@ -291,7 +311,7 @@ export function ImageConverter() {
                   }
                 />
 
-                <Collapse expanded={state.enabled}>
+                <Collapse expanded={state.enabled} keepMounted={false}>
                   <Stack gap="sm" mt="md" pl="lg">
                     {spec.lossless === "optional" && (
                       <Switch
@@ -315,7 +335,7 @@ export function ImageConverter() {
                           min={1}
                           mt="xs"
                           onChange={(value) => updateTarget(format, { quality: value })}
-                          thumbProps={{ "aria-label": `${spec.label} quality` }}
+                          thumbLabel={`${spec.label} quality`}
                           value={state.quality}
                         />
                       </div>
@@ -478,7 +498,7 @@ function AdvancedPanel({
         Advanced
       </Button>
 
-      <Collapse expanded={expanded}>
+      <Collapse expanded={expanded} keepMounted={false}>
         <Stack gap="sm" mt="sm">
           {fields.map((field) => {
             const value = values[field.key] ?? field.initial;
@@ -531,6 +551,13 @@ const rotationOptions = ["0", "90", "180", "270"].map((degrees) => ({
   value: degrees,
   label: `${degrees}°`,
 }));
+
+/** FileButton hands back one file, an array of them, or nothing. */
+function toFiles(picked: File[] | File | null): File[] {
+  if (!picked) return [];
+
+  return Array.isArray(picked) ? picked : [picked];
+}
 
 function saveBlob(blob: Blob, name: string): void {
   const url = URL.createObjectURL(blob);
