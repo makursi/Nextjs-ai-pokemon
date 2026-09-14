@@ -19,3 +19,7 @@ _Avoid_: site, project
 **Tool Registry**:
 The single list of Tools that exist; the homepage grid and the sitemap both read it.
 _Avoid_: tool list, manifest, catalog
+
+**Conversion**:
+One input image together with the target settings it is encoded with. A Batch is many Conversions, and each Conversion yields at most one output file per target format.
+_Avoid_: job, task, transform
