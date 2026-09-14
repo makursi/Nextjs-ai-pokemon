@@ -1,6 +1,6 @@
 # Toolbox
 
-A collection of single-purpose browser tools — cover image generator, image format conversion, and more to come. One deployable, many tools.
+A collection of single-purpose browser tools, each running entirely in your browser. One deployable, many tools.
 
 ## Prerequisites
 
@@ -48,6 +48,10 @@ CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
 Tool logic stays in `src/tools/*` so it is testable without Next and can be moved to `packages/*` later, once a second consumer actually needs it.
 
 Tests sit beside the code as `<file>.test.ts`. `pnpm test` runs them in Vitest's Node environment, with `@/*` resolving — see `docs/adr/0003-vitest-for-unit-tests.md`.
+
+## Constraints
+
+Every Tool runs in the browser and the site makes **no outbound requests** after a page has loaded: no analytics, no telemetry, no error reporting, no third-party hosts. This is enforced by a `Content-Security-Policy` header, not by convention — see `docs/adr/0005-no-outbound-requests.md`.
 
 ## Environment
 
