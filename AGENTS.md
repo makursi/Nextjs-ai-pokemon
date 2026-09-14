@@ -42,6 +42,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Server-only values** such as `SITE_URL` are read in server components and route metadata, never inlined into client code. `SITE_URL` is declared in the build task's `env` _and_ `.env*` is in its `inputs`, so a changed `.env.local` cannot be served a cached build with a stale origin.
 - **Catalog versions.** The catalog holds versions shared by more than one package plus the repo toolchain; single-consumer dependencies use literal ranges in their own `package.json`. `typescript` and `oxlint-tsgolint` are pinned exactly because tsgolint tracks one TypeScript release.
 - Commits are English, conventional commits.
+- **UI work follows `docs/design.md`.** It holds the tokens, the rules that are not up for re-litigation, and the pre-flight checklist; update it in the same commit as the change. The visual language comes from the `minimalist-ui` protocol, the gates from `design-taste-frontend`.
+- **Nothing is loaded from a third party.** The CSP in `apps/web/next.config.ts` allows `img-src 'self'` and `font-src 'self'`, so images, fonts and icons are all self-hosted or built at build time. See `docs/adr/0005-no-outbound-requests.md`.
 
 ## Agent skills
 
