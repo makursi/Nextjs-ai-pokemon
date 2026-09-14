@@ -20,6 +20,7 @@ pnpm dev        # http://localhost:3000
 apps/web/     the App (Next.js App Router, Mantine, Tailwind CSS v4)
 packages/     code shared between workspace packages
 docs/adr/     decisions that are hard to reverse
+docs/design.md  the UI: tokens, rules, and what is unfinished
 CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
 ```
 
@@ -52,6 +53,10 @@ Tests live in a `__tests__` directory beside the code they cover, named `<file>.
 ## Constraints
 
 Every Tool runs in the browser and the site makes **no outbound requests** after a page has loaded: no analytics, no telemetry, no error reporting, no third-party hosts. This is enforced by a `Content-Security-Policy` header, not by convention — see `docs/adr/0005-no-outbound-requests.md`.
+
+## Design
+
+`docs/design.md` is the single source of truth for how the App looks: the tokens, the rules, the pre-flight checklist to run before merging UI work, and what is still unfinished. Read it before changing anything visual, and update it in the same change — a design document that disagrees with the code is worse than none.
 
 ## Assets
 
