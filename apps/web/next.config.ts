@@ -28,6 +28,11 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Mantine ships a module per component; this is the tree-shaking hint its
+    // own Next.js guide asks for.
+    optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
+  },
   async headers() {
     return [
       {

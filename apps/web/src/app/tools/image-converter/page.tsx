@@ -1,3 +1,4 @@
+import { Container, Stack, Text, Title } from "@mantine/core";
 import type { Metadata } from "next";
 
 import { ImageConverter } from "@/tools/image-converter/ImageConverter";
@@ -10,11 +11,13 @@ export const metadata: Metadata = {
 
 export default function ImageConverterPage() {
   return (
-    <main className="mx-auto max-w-3xl px-6 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight">{meta.title}</h1>
-      <p className="mt-2 text-muted-foreground">{meta.description}</p>
+    <Container size="md" py="xl">
+      <Stack gap="xs">
+        <Title order={1}>{meta.title}</Title>
+        <Text c="dimmed">{meta.description}</Text>
+      </Stack>
 
       <ImageConverter />
-    </main>
+    </Container>
   );
 }

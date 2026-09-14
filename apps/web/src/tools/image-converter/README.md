@@ -17,7 +17,7 @@ The pure parts — `sniff`, `naming`, `limits`, `geometry`, `bmp`, `options`, `p
 
 ## What CI does not cover
 
-CI runs `fmt:check`, `lint`, `typecheck`, `test` and `build`. It cannot run a browser, so it does not know whether a codec produces a valid file. Re-run the checklist by hand when a `@jsquash/*` version changes, when an encoder is touched, or when the CSP in `next.config.ts` changes.
+CI runs `fmt:check`, `lint`, `typecheck`, `test` and `build`. It cannot run a browser, so it does not know whether a codec produces a valid file, whether the drop zone is reachable from the keyboard, or whether the CSS layers still order correctly. Re-run the checklist by hand when a `@jsquash/*` version changes, when an encoder is touched, when the CSP in `next.config.ts` changes, or when the `@layer` line in `globals.css` changes — that line is what keeps Tailwind's utilities able to override Mantine, and getting it wrong is invisible in a build.
 
 ## Manual QA checklist
 
@@ -36,7 +36,8 @@ One conversion each way, using a photo with transparency and a photo without:
 - [ ] One unreadable file fails on its own; the other Conversions in the Batch still complete.
 - [ ] Cancel stops the Batch and clears the results.
 - [ ] The ZIP download contains every successful output, named as the list shows.
-- [ ] The whole flow — add, choose targets, set options, convert, download — is usable with the keyboard alone.
+- [ ] The whole flow — add, choose targets, set options, convert, download — is usable with the keyboard alone, including opening the file dialog from the drop zone with Space or Enter.
+- [ ] Mantine's components look styled at all (if they render unstyled, the `@layer` order in `globals.css` has been changed and Tailwind is losing to Mantine, or winning over it).
 - [ ] With DevTools open, a full Batch produces **no outbound requests** after the page has loaded.
 - [ ] With the console open, no CSP violation is reported (a violation means `next.config.ts` and the Worker disagree about something).
 - [ ] A large image (near the pixel limit) does not freeze the page while it converts.

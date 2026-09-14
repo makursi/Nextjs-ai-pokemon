@@ -31,12 +31,3 @@ catalog:
   # vite is a required peer of vitest, so the two are versioned together.
   vite: ^8.3.0
   vitest: ^5.0.0
-
-# pnpm's minimum-release-age supply-chain policy rejects versions published
-# inside its cutoff window. tailwind-merge 3.7.0 was roughly ten hours old when
-# this workspace was created, so pnpm wrote this exclusion itself. Keep it: a
-# caret range would resolve straight back into the freshly published version and
-# fail the policy again. It becomes a no-op once the release ages past the
-# cutoff, and can then be deleted.
-minimumReleaseAgeExclude:
-  - tailwind-merge@3.7.0
