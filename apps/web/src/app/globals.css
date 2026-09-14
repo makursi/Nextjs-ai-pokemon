@@ -13,3 +13,46 @@
 @import "tailwindcss";
 @import "@mantine/core/styles.layer.css";
 @import "@mantine/dropzone/styles.layer.css";
+
+/*
+ * Entry motion.
+ *
+ * The page is two blocks and both are above the fold, so this runs on load rather
+ * than on scroll — a scroll observer would be machinery with nothing to observe.
+ * Motion is transform and opacity only, and it is off entirely for anyone who has
+ * asked for less motion.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    animation: reveal 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .reveal-second {
+    animation-delay: 80ms;
+  }
+}
+
+/*
+ * The card answers the pointer, because a card that does not is a card nobody
+ * clicks. 200ms and a shadow at 4% opacity: enough to register as touchable,
+ * not enough to read as depth.
+ */
+.lift {
+  transition: box-shadow 200ms ease;
+}
+
+.lift:hover {
+  box-shadow: 0 2px 8px rgb(0 0 0 / 4%);
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

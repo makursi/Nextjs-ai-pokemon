@@ -11,4 +11,13 @@ export type ToolMeta = {
   title: string;
   /** One line, shown in the homepage grid. */
   description: string;
+  /**
+   * The Tool's cover image, as a path served from `public/` — a same-origin URL,
+   * because the site loads no third-party assets (see ADR-0005).
+   *
+   * Optional on purpose: a Tool with no cover is listed on type alone, so adding
+   * a Tool never waits on artwork, and no placeholder graphic is invented to
+   * stand in for one.
+   */
+  cover?: string;
 };
