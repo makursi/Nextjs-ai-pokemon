@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { fitWithin, rotateSize, targetSize } from "@/tools/image-converter/geometry";
+import { fitWithin, rotateSize, targetSize } from "@/tools/image-converter/core/geometry";
 
 describe("fitWithin", () => {
   it("scales a landscape image down to the longest edge", () => {

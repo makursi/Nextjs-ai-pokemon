@@ -1,6 +1,6 @@
-import type { Rotation } from "./geometry";
-import type { TargetSettings } from "./options";
-import type { PlannedConversion } from "./plan";
+import type { Rotation } from "../core/geometry";
+import type { TargetSettings } from "../core/options";
+import type { PlannedConversion } from "../core/plan";
 import type { ConvertRequest, ConvertResponse } from "./worker";
 
 /**

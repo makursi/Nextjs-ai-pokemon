@@ -17,11 +17,11 @@ import { defaultOptions as oxipngDefaults } from "@jsquash/oxipng/meta.js";
  * hang `next build` under Turbopack 16.3.5 — see ADR-0004 — so their wrappers
  * (`@jsquash/avif/encode`, `@jsquash/oxipng`) are bypassed rather than dropped.
  */
-import { encodeBmp } from "./bmp";
-import { formatSpecs } from "./formats";
-import { rotateSize, targetSize, type Rotation } from "./geometry";
-import { checkLimits } from "./limits";
-import { resolveEncodeOptions, type EncodeOptions, type TargetSettings } from "./options";
+import { encodeBmp } from "../core/bmp";
+import { formatSpecs } from "../core/formats";
+import { rotateSize, targetSize, type Rotation } from "../core/geometry";
+import { checkLimits } from "../core/limits";
+import { resolveEncodeOptions, type EncodeOptions, type TargetSettings } from "../core/options";
 
 export type ConvertRequest = {
   id: number;

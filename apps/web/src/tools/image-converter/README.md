@@ -4,16 +4,31 @@ Converts PNG, JPEG, WebP, AVIF and BMP into each other, in bulk, entirely in the
 
 Nothing is uploaded: the files are read with the File API, decoded and encoded in Web Workers, and the results are held as blobs until they are downloaded.
 
+## Layout
+
+```
+ImageConverter.tsx   the Tool's UI; the route renders this and nothing else
+meta.ts              the Tool Registry entry
+README.md            this file: how it works, and what to check by hand
+zip.ts               turns the finished outputs into one download
+core/                pure, browser-free logic — the part `pnpm test` covers
+  formats · advanced · options · bmp · geometry · limits · naming · plan · sniff
+  __tests__/         the tests for those modules
+worker/              the browser-only half
+  worker.ts          decode, rotate, flatten, resize, encode — one Conversion
+  converter.ts       the Worker pool and the Batch queue
+```
+
 ## How a Conversion runs
 
-`ImageConverter.tsx` (client) plans a Batch with `planConversions`, then `ConversionPool` hands each Conversion to a Worker. Inside the Worker (`worker.ts`):
+`ImageConverter.tsx` (client) plans a Batch with `planConversions`, then `ConversionPool` hands each Conversion to a Worker. Inside the Worker (`worker/worker.ts`):
 
 1. `createImageBitmap` decodes the file — the browser's own decoder, for every input format.
 2. An `OffscreenCanvas` at the rotated size; when the target has no alpha channel it is created with `{ alpha: false }` and filled with the chosen background, which is what stops transparent pixels turning black in JPEG.
 3. `context2d.getImageData` and, if a longest edge was asked for, a pass through @jsquash/resize (lanczos3).
-4. Encode: **PNG** by canvas, then an oxipng pass; **BMP** by `bmp.ts`; **JPEG/WebP/AVIF** by the jSquash codecs. AVIF and oxipng use their single-threaded builds on purpose — see `docs/adr/0004-image-codecs-single-threaded-in-a-worker.md`.
+4. Encode: **PNG** by canvas, then an oxipng pass; **BMP** by `core/bmp.ts`; **JPEG/WebP/AVIF** by the jSquash codecs. AVIF and oxipng use their single-threaded builds on purpose — see `docs/adr/0004-image-codecs-single-threaded-in-a-worker.md`.
 
-The pure parts — `sniff`, `naming`, `limits`, `geometry`, `bmp`, `options`, `planConversions` — are unit-tested in `__tests__/` under `pnpm test`. Everything that needs a browser is covered by the checklist below instead.
+The pure parts — `sniff`, `naming`, `limits`, `geometry`, `bmp`, `options`, `planConversions` — are unit-tested in `core/__tests__/` under `pnpm test`. Everything that needs a browser is covered by the checklist below instead.
 
 ## What CI does not cover
 

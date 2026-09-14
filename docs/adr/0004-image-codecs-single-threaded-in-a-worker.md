@@ -10,7 +10,7 @@ The multi-threaded builds are not a preference. **Turbopack 16.3.5 hangs `next b
 - AVIF encoding is slower than it could be. Squoosh's own numbers for a single-threaded libavif encode of a 1600×719 photo are in the 1–2 second range, which is why this runs in a Worker and why the pool keeps several of them busy instead of freezing the page.
 - The `avif_enc.wasm` asset is 3.3 MB. It is a dynamic import inside the Worker, so it is only fetched when someone actually converts to AVIF — but @jsquash/resize statically imports three resize backends, so its hqx and magic-kernel WebAssembly ships whether or not they are used (~150 KB).
 - PNG output goes through a canvas (unoptimised) and then through single-threaded oxipng, which is a second pass and not a hard dependency: if it fails, the bigger PNG is kept rather than failing the Conversion.
-- The hand-written BMP encoder exists because 24-bit BMP is the one output format with no codec in the dependency set and no browser support. See `bmp.ts`.
+- The hand-written BMP encoder exists because 24-bit BMP is the one output format with no codec in the dependency set and no browser support. See `core/bmp.ts`.
 
 ## Considered Options
 
