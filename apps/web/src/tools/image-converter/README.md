@@ -13,7 +13,7 @@ Nothing is uploaded: the files are read with the File API, decoded and encoded i
 3. `context2d.getImageData` and, if a longest edge was asked for, a pass through @jsquash/resize (lanczos3).
 4. Encode: **PNG** by canvas, then an oxipng pass; **BMP** by `bmp.ts`; **JPEG/WebP/AVIF** by the jSquash codecs. AVIF and oxipng use their single-threaded builds on purpose — see `docs/adr/0004-image-codecs-single-threaded-in-a-worker.md`.
 
-The pure parts — `sniff`, `naming`, `limits`, `geometry`, `bmp`, `options`, `planConversions` — are unit-tested under `pnpm test`. Everything that needs a browser is covered by the checklist below instead.
+The pure parts — `sniff`, `naming`, `limits`, `geometry`, `bmp`, `options`, `planConversions` — are unit-tested in `__tests__/` under `pnpm test`. Everything that needs a browser is covered by the checklist below instead.
 
 ## What CI does not cover
 
