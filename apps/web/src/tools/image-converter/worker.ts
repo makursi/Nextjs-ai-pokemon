@@ -1,0 +1,224 @@
+import type {
+  AVIFModule,
+  EncodeOptions as AvifEncodeOptions,
+} from "@jsquash/avif/codec/enc/avif_enc.js";
+
+/**
+ * The worker side of a Conversion.
+ *
+ * Everything expensive happens here so the page stays responsive: decode,
+ * rotate, flatten, resize and encode. The protocol is one request in (the
+ * file's bytes are *transferred*, not copied) and one response out.
+ *
+ * Two codecs are reached through their single-threaded builds on purpose. The
+ * multi-threaded libavif encoder and the wasm-bindgen-rayon build of oxipng both
+ * hang `next build` under Turbopack 16.3.5 — see ADR-0004 — so their wrappers
+ * (`@jsquash/avif/encode`, `@jsquash/oxipng`) are bypassed rather than dropped.
+ */
+import { encodeBmp } from "./bmp";
+import { formatSpecs } from "./formats";
+import { rotateSize, targetSize, type Rotation } from "./geometry";
+import { resolveEncodeOptions, type EncodeOptions, type TargetSettings } from "./options";
+
+export type ConvertRequest = {
+  id: number;
+  bytes: ArrayBuffer;
+  target: TargetSettings;
+  rotate: Rotation;
+  maxEdge: number | null;
+  /** Flattened into the output when the target format has no alpha channel. */
+  background: string;
+};
+
+export type ConvertResponse =
+  | { id: number; ok: true; bytes: ArrayBuffer; mime: string; width: number; height: number }
+  | { id: number; ok: false; message: string };
+
+/**
+ * Just enough of the worker global to talk over `postMessage`.
+ *
+ * Spelled out rather than pulled from the `WebWorker` lib, which cannot be
+ * loaded alongside `DOM` without the two disagreeing about shared names.
+ */
+type WorkerContext = {
+  addEventListener: (
+    type: "message",
+    listener: (event: MessageEvent<ConvertRequest>) => void,
+  ) => void;
+  postMessage: (message: ConvertResponse, transfer?: Transferable[]) => void;
+};
+
+// oxlint-disable-next-line typescript/no-unsafe-type-assertion -- `self` is the worker global at runtime; the DOM lib types it as a Window.
+const context = self as unknown as WorkerContext;
+
+context.addEventListener("message", (event: MessageEvent<ConvertRequest>) => {
+  void respond(event.data);
+});
+
+async function respond(request: ConvertRequest): Promise<void> {
+  try {
+    const result = await run(request);
+    // oxlint-disable-next-line unicorn/require-post-message-target-origin -- a worker's postMessage takes a transfer list, not a target origin.
+    context.postMessage({ id: request.id, ok: true, ...result }, [result.bytes]);
+  } catch (error) {
+    // oxlint-disable-next-line unicorn/require-post-message-target-origin -- a worker's postMessage takes a transfer list, not a target origin.
+    context.postMessage({ id: request.id, ok: false, message: describe(error) });
+  }
+}
+
+async function run(request: ConvertRequest) {
+  const spec = formatSpecs[request.target.format];
+  const bitmap = await createImageBitmap(new Blob([request.bytes]), {
+    imageOrientation: "from-image",
+  });
+
+  try {
+    const rotated = rotateSize(bitmap.width, bitmap.height, request.rotate);
+    const size = targetSize(bitmap.width, bitmap.height, {
+      maxEdge: request.maxEdge,
+      rotate: request.rotate,
+    });
+
+    // The canvas is the rotated size and the resize is a separate, higher
+    // quality pass through libresize. Flattening happens here too: it has to
+    // happen before the pixels reach a codec with no alpha channel.
+    const canvas = new OffscreenCanvas(rotated.width, rotated.height);
+    const context2d = canvas.getContext("2d", { alpha: spec.alpha });
+    if (!context2d) throw new Error("This browser did not provide a 2D canvas.");
+
+    if (!spec.alpha) {
+      context2d.fillStyle = request.background;
+      context2d.fillRect(0, 0, rotated.width, rotated.height);
+    }
+
+    drawRotated(context2d, bitmap, rotated.width, rotated.height, request.rotate);
+
+    const source = context2d.getImageData(0, 0, rotated.width, rotated.height);
+    const image =
+      size.width === source.width && size.height === source.height
+        ? source
+        : await resizeImage(source, size);
+
+    const bytes = await encode(image, request.target);
+
+    return { bytes, mime: spec.mime, width: image.width, height: image.height };
+  } finally {
+    bitmap.close();
+  }
+}
+
+/** Rotate about the canvas centre, which is what makes the size swap work out. */
+function drawRotated(
+  context2d: OffscreenCanvasRenderingContext2D,
+  bitmap: ImageBitmap,
+  canvasWidth: number,
+  canvasHeight: number,
+  rotate: Rotation,
+): void {
+  context2d.translate(canvasWidth / 2, canvasHeight / 2);
+  context2d.rotate((rotate * Math.PI) / 180);
+  context2d.drawImage(bitmap, -bitmap.width / 2, -bitmap.height / 2, bitmap.width, bitmap.height);
+}
+
+async function resizeImage(
+  source: ImageData,
+  size: { width: number; height: number },
+): Promise<ImageData> {
+  const { default: resize } = await import("@jsquash/resize");
+
+  return resize(source, { width: size.width, height: size.height });
+}
+
+async function encode(image: ImageData, target: TargetSettings): Promise<ArrayBuffer> {
+  const options = resolveEncodeOptions(target);
+
+  switch (target.format) {
+    case "jpeg": {
+      const { default: encodeJpeg } = await import("@jsquash/jpeg/encode");
+
+      return encodeJpeg(image, options);
+    }
+    case "webp": {
+      const { default: encodeWebp } = await import("@jsquash/webp/encode");
+
+      return encodeWebp(image, options);
+    }
+    case "avif":
+      return encodeAvif(image, options);
+    case "png":
+      return optimisePng(await encodePng(image), options);
+    case "bmp":
+      return toArrayBuffer(encodeBmp(image));
+    default:
+      throw new Error(`Unsupported target format: ${String(target.format)}`);
+  }
+}
+
+async function encodePng(image: ImageData): Promise<Uint8Array> {
+  const canvas = new OffscreenCanvas(image.width, image.height);
+  const context2d = canvas.getContext("2d");
+  if (!context2d) throw new Error("This browser did not provide a 2D canvas.");
+
+  context2d.putImageData(image, 0, 0);
+  const blob = await canvas.convertToBlob({ type: "image/png" });
+
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
+/**
+ * libavif's single-threaded build, instantiated once per worker.
+ *
+ * Memoised because the module is several megabytes, and an Emscripten instance
+ * cannot serve two conversions at once — the pool guarantees this worker only
+ * ever has one in flight.
+ */
+let avifModule: Promise<AVIFModule> | undefined;
+
+async function encodeAvif(image: ImageData, options: EncodeOptions): Promise<ArrayBuffer> {
+  const { default: createModule } = await import("@jsquash/avif/codec/enc/avif_enc.js");
+  const codec = await (avifModule ??= createModule({ noInitialRun: true }));
+
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- libavif merges these over its own defaults, which its required-fields type cannot express.
+  const codecOptions = options as unknown as AvifEncodeOptions;
+  const output = codec.encode(
+    new Uint8Array(image.data.buffer),
+    image.width,
+    image.height,
+    codecOptions,
+  );
+  if (!output) throw new Error("AVIF encoding failed.");
+
+  return toArrayBuffer(output);
+}
+
+/** oxipng's single-threaded build, used as a lossless second pass over the PNG. */
+let oxipngModule: Promise<typeof import("@jsquash/oxipng/codec/pkg/squoosh_oxipng.js")> | undefined;
+
+async function optimisePng(png: Uint8Array, options: EncodeOptions): Promise<ArrayBuffer> {
+  const level = typeof options.level === "number" ? options.level : 2;
+
+  try {
+    oxipngModule ??= import("@jsquash/oxipng/codec/pkg/squoosh_oxipng.js").then(async (module) => {
+      await module.default();
+
+      return module;
+    });
+
+    const { optimise } = await oxipngModule;
+
+    return toArrayBuffer(optimise(png, level, false, true));
+  } catch {
+    // Optimisation is a second pass, not the Conversion: a larger PNG is a
+    // better outcome than a failed file.
+    return toArrayBuffer(png);
+  }
+}
+
+/** Emscripten hands back a view over its whole heap, so the used range is copied out. */
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.slice().buffer;
+}
+
+function describe(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
