@@ -35,7 +35,7 @@ export function checkLimits(
     return {
       ok: false,
       reason: "too-large",
-      message: `This file is ${megabytes(input.bytes)} MB; the limit is ${megabytes(limits.maxBytes)} MB.`,
+      message: `这个文件有 ${megabytes(input.bytes)} MB，上限是 ${megabytes(limits.maxBytes)} MB。`,
     };
   }
 
@@ -45,7 +45,7 @@ export function checkLimits(
       return {
         ok: false,
         reason: "too-many-pixels",
-        message: `This image is ${input.width}×${input.height} pixels; the limit is ${Math.round(
+        message: `这张图有 ${input.width}×${input.height} 像素，上限是 ${Math.round(
           limits.maxPixels / 1_000_000,
         )} megapixels.`,
       };

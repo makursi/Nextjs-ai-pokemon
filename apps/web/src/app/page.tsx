@@ -20,7 +20,7 @@ export default function HomePage() {
         <section className="reveal reveal-second">
           {tools.length === 0 ? (
             <Text c="dimmed" size="sm">
-              No tools yet.
+              还没有工具。
             </Text>
           ) : (
             /*
@@ -83,7 +83,7 @@ function ToolCard({ tool }: { tool: ToolMeta }) {
             </Text>
             <Text c="dimmed">{tool.description}</Text>
             <Text mt="xs" size="sm">
-              Open <span aria-hidden="true">→</span>
+              打开 <span aria-hidden="true">→</span>
             </Text>
           </Stack>
         </Flex>

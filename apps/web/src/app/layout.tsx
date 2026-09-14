@@ -23,14 +23,20 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
     default: siteName,
-    template: `%s · ${siteName}`,
+    // A pipe rather than a middle dot: it is the conventional separator in a
+    // Chinese UI, and the middle dot is rationed by the design rules.
+    template: `%s | ${siteName}`,
   },
   description: siteDescription,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html className={`${geistSans.variable} ${geistMono.variable}`} lang="en" {...mantineHtmlProps}>
+    <html
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      lang="zh-CN"
+      {...mantineHtmlProps}
+    >
       <head>
         <ColorSchemeScript defaultColorScheme="auto" />
       </head>

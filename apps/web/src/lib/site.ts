@@ -8,8 +8,7 @@ const fallbackUrl = "http://localhost:3000";
 
 export const siteName = "Toolbox";
 
-export const siteDescription =
-  "A collection of single-purpose browser tools. No accounts, no uploads.";
+export const siteDescription = "一批单一用途的浏览器小工具。不需要账号，文件不会离开你的设备。";
 
 /**
  * Canonical origin, falling back to localhost so dev needs no configuration.

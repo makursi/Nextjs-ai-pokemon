@@ -93,7 +93,7 @@ async function run(request: ConvertRequest) {
     // happen before the pixels reach a codec with no alpha channel.
     const canvas = new OffscreenCanvas(rotated.width, rotated.height);
     const context2d = canvas.getContext("2d", { alpha: spec.alpha });
-    if (!context2d) throw new Error("This browser did not provide a 2D canvas.");
+    if (!context2d) throw new Error("浏览器没有提供 2D 画布。");
 
     if (!spec.alpha) {
       context2d.fillStyle = request.background;
@@ -159,14 +159,14 @@ async function encode(image: ImageData, target: TargetSettings): Promise<ArrayBu
     case "bmp":
       return toArrayBuffer(encodeBmp(image));
     default:
-      throw new Error(`Unsupported target format: ${String(target.format)}`);
+      throw new Error(`不支持的目标格式：${String(target.format)}`);
   }
 }
 
 async function encodePng(image: ImageData): Promise<Uint8Array> {
   const canvas = new OffscreenCanvas(image.width, image.height);
   const context2d = canvas.getContext("2d");
-  if (!context2d) throw new Error("This browser did not provide a 2D canvas.");
+  if (!context2d) throw new Error("浏览器没有提供 2D 画布。");
 
   context2d.putImageData(image, 0, 0);
   const blob = await canvas.convertToBlob({ type: "image/png" });
@@ -196,7 +196,7 @@ async function encodeAvif(image: ImageData, options: EncodeOptions): Promise<Arr
     image.height,
     codecOptions,
   );
-  if (!output) throw new Error("AVIF encoding failed.");
+  if (!output) throw new Error("AVIF 编码失败。");
 
   return toArrayBuffer(output);
 }

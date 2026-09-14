@@ -113,7 +113,7 @@ export class ConversionPool {
 
       const file = files[conversion.sourceIndex];
       if (!file) {
-        onOutcome({ ok: false, conversion, message: "The file is no longer in the list." });
+        onOutcome({ ok: false, conversion, message: "这个文件已经不在列表里了。" });
         continue;
       }
 
@@ -159,8 +159,8 @@ export class ConversionPool {
         worker.removeEventListener("error", onError);
         result();
       };
-      const abort = () => settle(() => reject(new Error("Cancelled.")));
-      const onError = () => settle(() => reject(new Error("The conversion Worker stopped.")));
+      const abort = () => settle(() => reject(new Error("已取消。")));
+      const onError = () => settle(() => reject(new Error("转换进程中断了。")));
       const onMessage = (event: MessageEvent<ConvertResponse>) => {
         if (event.data.id !== request.id) return;
         settle(() => resolve(event.data));

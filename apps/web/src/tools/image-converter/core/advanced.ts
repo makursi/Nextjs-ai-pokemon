@@ -22,10 +22,10 @@ export type AdvancedField =
 
 export const advancedFields: Partial<Record<ImageFormat, AdvancedField[]>> = {
   jpeg: [
-    { key: "progressive", label: "Progressive scan", kind: "boolean", initial: true },
+    { key: "progressive", label: "渐进式扫描", kind: "boolean", initial: true },
     {
       key: "quant_table",
-      label: "Quantisation table (0-8)",
+      label: "量化表（0-8）",
       kind: "number",
       min: 0,
       max: 8,
@@ -34,10 +34,18 @@ export const advancedFields: Partial<Record<ImageFormat, AdvancedField[]>> = {
     },
   ],
   webp: [
-    { key: "method", label: "Effort (0-6)", kind: "number", min: 0, max: 6, step: 1, initial: 4 },
+    {
+      key: "method",
+      label: "压缩力度（0-6）",
+      kind: "number",
+      min: 0,
+      max: 6,
+      step: 1,
+      initial: 4,
+    },
     {
       key: "alpha_quality",
-      label: "Alpha quality (0-100)",
+      label: "透明通道质量（0-100）",
       kind: "number",
       min: 0,
       max: 100,
@@ -48,7 +56,7 @@ export const advancedFields: Partial<Record<ImageFormat, AdvancedField[]>> = {
   avif: [
     {
       key: "speed",
-      label: "Speed (0-10, slower is smaller)",
+      label: "速度（0-10，越慢文件越小）",
       kind: "number",
       min: 0,
       max: 10,
@@ -57,7 +65,7 @@ export const advancedFields: Partial<Record<ImageFormat, AdvancedField[]>> = {
     },
     {
       key: "denoiseLevel",
-      label: "Denoise (0-50)",
+      label: "降噪（0-50）",
       kind: "number",
       min: 0,
       max: 50,
@@ -66,7 +74,7 @@ export const advancedFields: Partial<Record<ImageFormat, AdvancedField[]>> = {
     },
     {
       key: "subsample",
-      label: "Chroma subsampling (0-3)",
+      label: "色度抽样（0-3）",
       kind: "number",
       min: 0,
       max: 3,
@@ -78,7 +86,7 @@ export const advancedFields: Partial<Record<ImageFormat, AdvancedField[]>> = {
   png: [
     {
       key: "level",
-      label: "OxiPNG optimisation level (0-6)",
+      label: "OxiPNG 优化级别（0-6）",
       kind: "number",
       min: 0,
       max: 6,
