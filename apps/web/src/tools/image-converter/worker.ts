@@ -2,6 +2,8 @@ import type {
   AVIFModule,
   EncodeOptions as AvifEncodeOptions,
 } from "@jsquash/avif/codec/enc/avif_enc.js";
+import { defaultOptions as avifDefaults } from "@jsquash/avif/meta.js";
+import { defaultOptions as oxipngDefaults } from "@jsquash/oxipng/meta.js";
 
 /**
  * The worker side of a Conversion.
@@ -18,6 +20,7 @@ import type {
 import { encodeBmp } from "./bmp";
 import { formatSpecs } from "./formats";
 import { rotateSize, targetSize, type Rotation } from "./geometry";
+import { checkLimits } from "./limits";
 import { resolveEncodeOptions, type EncodeOptions, type TargetSettings } from "./options";
 
 export type ConvertRequest = {
@@ -73,6 +76,12 @@ async function run(request: ConvertRequest) {
   });
 
   try {
+    // Browsers disagree about what a canvas does past its area limit — throw,
+    // blank, or clamp — so this is the only place the pixel limit can be
+    // enforced the same way everywhere. It fails this Conversion alone.
+    const pixels = checkLimits({ width: bitmap.width, height: bitmap.height });
+    if (!pixels.ok) throw new Error(pixels.message);
+
     const rotated = rotateSize(bitmap.width, bitmap.height, request.rotate);
     const size = targetSize(bitmap.width, bitmap.height, {
       maxEdge: request.maxEdge,
@@ -176,10 +185,11 @@ let avifModule: Promise<AVIFModule> | undefined;
 
 async function encodeAvif(image: ImageData, options: EncodeOptions): Promise<ArrayBuffer> {
   const { default: createModule } = await import("@jsquash/avif/codec/enc/avif_enc.js");
-  const codec = await (avifModule ??= createModule({ noInitialRun: true }));
+  const codec = await loadAvifModule(createModule);
 
-  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- libavif merges these over its own defaults, which its required-fields type cannot express.
-  const codecOptions = options as unknown as AvifEncodeOptions;
+  // The codec's marshaller throws on any field it does not receive, so the
+  // defaults are spread in here — that is the job the wrapper normally does.
+  const codecOptions: AvifEncodeOptions = { ...avifDefaults, ...options };
   const output = codec.encode(
     new Uint8Array(image.data.buffer),
     image.width,
@@ -189,6 +199,26 @@ async function encodeAvif(image: ImageData, options: EncodeOptions): Promise<Arr
   if (!output) throw new Error("AVIF encoding failed.");
 
   return toArrayBuffer(output);
+}
+
+/**
+ * Instantiate libavif once per worker, and forget a failure.
+ *
+ * Memoised because the module is several megabytes, and an Emscripten instance
+ * cannot serve two conversions at once — the pool guarantees this worker only
+ * ever has one in flight. A rejected promise is cleared rather than kept, so
+ * one failed fetch of the 3.3 MB asset does not fail every later AVIF
+ * Conversion in this worker.
+ */
+async function loadAvifModule(
+  createModule: (options: { noInitialRun: boolean }) => Promise<AVIFModule>,
+): Promise<AVIFModule> {
+  avifModule ??= createModule({ noInitialRun: true }).catch((error: unknown) => {
+    avifModule = undefined;
+    throw error;
+  });
+
+  return avifModule;
 }
 
 /** oxipng's single-threaded build, used as a lossless second pass over the PNG. */
@@ -206,7 +236,9 @@ async function optimisePng(png: Uint8Array, options: EncodeOptions): Promise<Arr
 
     const { optimise } = await oxipngModule;
 
-    return toArrayBuffer(optimise(png, level, false, true));
+    return toArrayBuffer(
+      optimise(png, level, oxipngDefaults.interlace, oxipngDefaults.optimiseAlpha),
+    );
   } catch {
     // Optimisation is a second pass, not the Conversion: a larger PNG is a
     // better outcome than a failed file.

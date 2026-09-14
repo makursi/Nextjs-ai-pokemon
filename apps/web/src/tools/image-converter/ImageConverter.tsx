@@ -9,7 +9,7 @@ import type { Rotation } from "./geometry";
 import { checkLimits } from "./limits";
 import type { TargetSettings } from "./options";
 import { planConversions, type PlannedConversion } from "./plan";
-import { sniffFormat } from "./sniff";
+import { sniffByteLength, sniffFormat } from "./sniff";
 import { zipConversions } from "./zip";
 
 /**
@@ -104,8 +104,10 @@ export function ImageConverter() {
         continue;
       }
 
-      // Extensions lie, so the format comes from the bytes themselves.
-      const head = new Uint8Array(await file.slice(0, 32).arrayBuffer());
+      // Extensions lie, so the format comes from the bytes themselves. Read as
+      // many as `sniffFormat` may look at, or a brand late in an ISO-BMFF
+      // header would be missed.
+      const head = new Uint8Array(await file.slice(0, sniffByteLength).arrayBuffer());
       const format = sniffFormat(head);
 
       if (format === null) {
@@ -134,7 +136,9 @@ export function ImageConverter() {
     setRunning(false);
   }, []);
 
-  const start = useCallback(async () => {
+  // Not memoised: it is passed to a plain button, and the dependency list drew
+  // a false "extra dependencies" report while buying nothing.
+  async function start(): Promise<void> {
     const plan = planConversions(
       files.map((file) => file.name),
       enabledTargets,
@@ -151,25 +155,29 @@ export function ImageConverter() {
 
     const parsed = Number.parseInt(maxEdge, 10);
 
-    await instance.run(
-      files,
-      plan,
-      {
-        targets: enabledTargets,
-        rotate,
-        maxEdge: Number.isFinite(parsed) && parsed > 0 ? parsed : null,
-        background,
-      },
-      (outcome) => {
-        if (cancelled.current) return;
-        setOutcomes((previous) => [...previous, outcome]);
-      },
-    );
-
-    instance.terminate();
-    pool.current = null;
-    setRunning(false);
-  }, [background, enabledTargets, files, maxEdge, rotate]);
+    try {
+      await instance.run(
+        files,
+        plan,
+        {
+          targets: enabledTargets,
+          rotate,
+          maxEdge: Number.isFinite(parsed) && parsed > 0 ? parsed : null,
+          background,
+        },
+        (outcome) => {
+          if (cancelled.current) return;
+          setOutcomes((previous) => [...previous, outcome]);
+        },
+      );
+    } finally {
+      // Whatever happened, the Workers go away and the form becomes usable
+      // again — a Batch that fails must not leave the Convert button disabled.
+      instance.terminate();
+      pool.current = null;
+      setRunning(false);
+    }
+  }
 
   const succeeded = outcomes.flatMap((outcome) =>
     outcome.ok ? [{ name: outcome.conversion.outputName, bytes: outcome.bytes }] : [],
@@ -185,12 +193,14 @@ export function ImageConverter() {
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault();
+            if (running) return;
             void addFiles(event.dataTransfer.files);
           }}
         >
           <input
             accept={acceptedMimes}
             className="peer sr-only"
+            disabled={running}
             id="image-files"
             multiple
             onChange={(event) => {

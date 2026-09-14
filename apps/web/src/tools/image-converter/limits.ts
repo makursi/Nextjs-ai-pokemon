@@ -2,9 +2,11 @@
  * How much work one file may cost before the browser falls over.
  *
  * Every Tool runs in a tab, so an unbounded batch is a way to freeze the page
- * rather than a feature. Both limits are checked before decoding where possible;
- * browsers disagree about what a canvas does past its area limit (throw, blank,
- * or clamp), so refusing early is the only behaviour that is the same everywhere.
+ * rather than a way to convert images. The byte limit is checked before
+ * decoding; the pixel limit can only be checked once the file has been decoded,
+ * because browsers disagree about what a canvas does past its area limit
+ * (throw, blank, or clamp) and refusing early is the only behaviour that is the
+ * same everywhere.
  */
 export type Limits = {
   maxBytes: number;

@@ -10,6 +10,13 @@ export type SniffedFormat = ImageFormat | "heic";
 
 const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
+/**
+ * How many leading bytes a caller must hand `sniffFormat`: enough for the
+ * signature checks and for the ISO-BMFF brand list, which is where AVIF and
+ * HEIC are told apart.
+ */
+export const sniffByteLength = 96;
+
 const avifBrands = new Set(["avif", "avis", "avio"]);
 // mif1/msf1 are generic HEIF brands; they only mean HEIC when no AVIF brand is present.
 const heicBrands = new Set([
@@ -48,7 +55,7 @@ function sniffIsoBmff(bytes: Uint8Array): SniffedFormat | null {
   // box size at 0 bounds the scan, and a generous cap keeps a malformed header
   // from being read as an endless brand list.
   const boxSize = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength).getUint32(0);
-  const end = Math.min(bytes.length, boxSize === 0 ? bytes.length : boxSize, 8 + 64);
+  const end = Math.min(bytes.length, boxSize === 0 ? bytes.length : boxSize, sniffByteLength);
 
   for (let offset = 8; offset + 4 <= end; offset += 4) {
     const brand = ascii(bytes, offset, 4);

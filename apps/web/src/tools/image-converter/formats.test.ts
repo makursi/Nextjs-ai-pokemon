@@ -84,4 +84,33 @@ describe("resolveEncodeOptions", () => {
       }),
     ).toEqual({ quality: 40, speed: 2, subsample: 3 });
   });
+
+  it("keeps the AVIF lossless values together even when advanced disagrees", () => {
+    // libavif writes a lossy file, and warns, unless these three match.
+    expect(
+      resolveEncodeOptions({
+        format: "avif",
+        quality: 40,
+        lossless: true,
+        advanced: { subsample: 1, speed: 2 },
+      }),
+    ).toEqual({
+      subsample: 3,
+      speed: 2,
+      lossless: true,
+      quality: 100,
+      qualityAlpha: -1,
+    });
+  });
+
+  it("keeps WebP in its lossless mode even when advanced asks for a quality", () => {
+    expect(
+      resolveEncodeOptions({
+        format: "webp",
+        quality: 40,
+        lossless: true,
+        advanced: { quality: 40, method: 2 },
+      }),
+    ).toEqual({ lossless: 1, method: 2, quality: 40 });
+  });
 });

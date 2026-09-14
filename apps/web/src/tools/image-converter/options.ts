@@ -1,11 +1,11 @@
-import type { ImageFormat } from "./formats";
+import { formatSpecs, type ImageFormat } from "./formats";
 
 /**
  * The quality setting, in the shape each codec expects.
  *
- * Every encoder is justified here rather than at the call site: AVIF warns at
- * runtime unless the lossless triple is forced together, and WebP spells
- * lossless as a number while AVIF spells it as a boolean.
+ * Every encoder is justified here rather than at the call site: WebP spells
+ * lossless as a number while AVIF spells it as a boolean, AVIF warns unless its
+ * lossless values move together, and JPEG has no lossless mode at all.
  */
 export type TargetSettings = {
   format: ImageFormat;
@@ -24,19 +24,25 @@ export function resolveEncodeOptions({
   lossless,
   advanced,
 }: TargetSettings): EncodeOptions {
-  return { ...defaultOptions(format, quality, lossless), ...advanced };
+  // The format table decides whether lossless means anything here: asking JPEG
+  // for a lossless encode is not an error, it is simply the quality path.
+  const wantsLossless = lossless && formatSpecs[format].lossless !== "never";
+  const base = wantsLossless ? {} : qualityOptions(format, quality);
+
+  if (!wantsLossless) return { ...base, ...advanced };
+
+  // Lossless is a mode, not a knob. Applied last so the Advanced panel cannot
+  // pull AVIF's quality/qualityAlpha/subsample apart — the combination libavif
+  // warns about, and silently writes a lossy file for.
+  return { ...base, ...advanced, ...losslessOptions(format) };
 }
 
-function defaultOptions(format: ImageFormat, quality: number, lossless: boolean): EncodeOptions {
+function qualityOptions(format: ImageFormat, quality: number): EncodeOptions {
   switch (format) {
     case "jpeg":
-      return { quality };
     case "webp":
-      return lossless ? { lossless: 1 } : { quality };
     case "avif":
-      return lossless
-        ? { lossless: true, quality: 100, qualityAlpha: -1, subsample: 3 }
-        : { quality };
+      return { quality };
     case "png":
     case "bmp":
       // Encoded without a codec that takes quality: PNG by canvas (and oxipng
@@ -44,5 +50,20 @@ function defaultOptions(format: ImageFormat, quality: number, lossless: boolean)
       return {};
     default:
       throw new Error(`No encoder options for ${String(format)}`);
+  }
+}
+
+function losslessOptions(format: ImageFormat): EncodeOptions {
+  switch (format) {
+    case "webp":
+      return { lossless: 1 };
+    case "avif":
+      return { lossless: true, quality: 100, qualityAlpha: -1, subsample: 3 };
+    case "jpeg":
+    case "png":
+    case "bmp":
+      return {};
+    default:
+      throw new Error(`No lossless mode for ${String(format)}`);
   }
 }

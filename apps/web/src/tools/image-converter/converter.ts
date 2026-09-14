@@ -47,6 +47,7 @@ export class ConversionPool {
   readonly #size: number;
   #workers: Worker[] = [];
   #pending = new Set<() => void>();
+  #stopped = false;
 
   constructor(size: number = defaultPoolSize()) {
     this.#size = size;
@@ -57,25 +58,26 @@ export class ConversionPool {
     planned: readonly PlannedConversion[],
     settings: BatchSettings,
     onOutcome: (outcome: Outcome) => void,
-    signal?: AbortSignal,
   ): Promise<void> {
     if (planned.length === 0) return;
 
+    this.#stopped = false;
     this.#workers = Array.from({ length: Math.min(this.#size, planned.length) }, () =>
       this.#createWorker(),
     );
 
     let claimed = 0;
     const claim = () =>
-      signal?.aborted || claimed >= planned.length ? undefined : planned[claimed++];
+      this.#stopped || claimed >= planned.length ? undefined : planned[claimed++];
 
     await Promise.all(
-      this.#workers.map((worker) => this.#pump(worker, files, settings, claim, onOutcome)),
+      this.#workers.map((_, index) => this.#pump(index, files, settings, claim, onOutcome)),
     );
   }
 
   /** Stops every Worker, including one in the middle of a WebAssembly encode. */
   terminate(): void {
+    this.#stopped = true;
     for (const worker of this.#workers) worker.terminate();
     this.#workers = [];
     // Deleting the current entry during iteration is defined behaviour for a Set.
@@ -87,8 +89,19 @@ export class ConversionPool {
     return new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
   }
 
+  /**
+   * A Worker that stopped takes nothing further, and posting to it would never
+   * settle — `postMessage` to a terminated Worker is silently dropped rather
+   * than throwing. Replacing it is what keeps one crashed Conversion from
+   * stalling the rest of the Batch.
+   */
+  #replaceWorker(index: number): void {
+    this.#workers.at(index)?.terminate();
+    this.#workers[index] = this.#createWorker();
+  }
+
   async #pump(
-    worker: Worker,
+    index: number,
     files: readonly File[],
     settings: BatchSettings,
     claim: () => PlannedConversion | undefined,
@@ -103,6 +116,9 @@ export class ConversionPool {
         onOutcome({ ok: false, conversion, message: "The file is no longer in the list." });
         continue;
       }
+
+      const worker = this.#workers.at(index);
+      if (!worker) return;
 
       try {
         const bytes = await file.arrayBuffer();
@@ -129,6 +145,7 @@ export class ConversionPool {
         );
       } catch (error) {
         onOutcome({ ok: false, conversion, message: describe(error) });
+        if (!this.#stopped) this.#replaceWorker(index);
       }
     }
   }
