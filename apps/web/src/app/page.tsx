@@ -1,3 +1,4 @@
+import { Anchor, Card, Container, SimpleGrid, Text, Title } from "@mantine/core";
 import Link from "next/link";
 
 import { siteDescription, siteName } from "@/lib/site";
@@ -5,27 +6,39 @@ import { toolPath, tools } from "@/tools/registry";
 
 export default function HomePage() {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-16">
-      <h1 className="text-3xl font-semibold tracking-tight">{siteName}</h1>
-      <p className="mt-2 text-muted-foreground">{siteDescription}</p>
+    <Container size="md" py="xl">
+      <Title order={1}>{siteName}</Title>
+      <Text c="dimmed" mt="xs">
+        {siteDescription}
+      </Text>
 
       {tools.length === 0 ? (
-        <p className="mt-10 text-sm text-muted-foreground">No tools yet.</p>
+        <Text c="dimmed" mt="xl" size="sm">
+          No tools yet.
+        </Text>
       ) : (
-        <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+        <SimpleGrid cols={{ base: 1, sm: 2 }} mt="xl">
           {tools.map((tool) => (
-            <li key={tool.slug}>
-              <Link
-                className="block rounded-lg border p-4 hover:border-foreground/20"
-                href={toolPath(tool.slug)}
-              >
-                <span className="font-medium">{tool.title}</span>
-                <span className="mt-1 block text-sm text-muted-foreground">{tool.description}</span>
-              </Link>
-            </li>
+            <Link className="block" href={toolPath(tool.slug)} key={tool.slug}>
+              {/*
+                The Link wraps the Card rather than sitting inside it, so the
+                whole card is the click target. Mantine's polymorphic
+                `component` prop would be the other way to do this, but it cannot
+                be handed a function across the Server Component boundary — the
+                build rejects it.
+              */}
+              <Card padding="md" withBorder>
+                <Anchor component="span" fw={500} underline="hover">
+                  {tool.title}
+                </Anchor>
+                <Text c="dimmed" mt={4} size="sm">
+                  {tool.description}
+                </Text>
+              </Card>
+            </Link>
           ))}
-        </ul>
+        </SimpleGrid>
       )}
-    </main>
+    </Container>
   );
 }

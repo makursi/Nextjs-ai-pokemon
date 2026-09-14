@@ -1,5 +1,27 @@
 "use client";
 
+import {
+  Alert,
+  Anchor,
+  Button,
+  Checkbox,
+  CloseButton,
+  Collapse,
+  ColorInput,
+  FileButton,
+  Group,
+  NumberInput,
+  Paper,
+  Progress,
+  Select,
+  SimpleGrid,
+  Slider,
+  Stack,
+  Switch,
+  Text,
+  Title,
+} from "@mantine/core";
+import { Dropzone } from "@mantine/dropzone";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { advancedFields, type AdvancedField } from "./advanced";
@@ -16,10 +38,10 @@ import { zipConversions } from "./zip";
  * The image converter, client-side by necessity: the codecs are WebAssembly
  * running in a Worker and the files never leave the tab.
  *
- * The controls are native elements rather than a component library because the
- * whole flow has to be usable from the keyboard — a file input, checkboxes,
- * sliders, a `<details>` for the codec knobs — and native controls come with
- * that behaviour and the right roles already.
+ * The controls are Mantine components, so labels, roles and keyboard behaviour
+ * come from the library rather than being re-derived here — which is also why
+ * the file input is a `Dropzone`: it is clickable, droppable and reachable from
+ * the keyboard (Space/Enter) in one element.
  */
 type TargetState = {
   enabled: boolean;
@@ -29,8 +51,6 @@ type TargetState = {
 };
 
 type Rejected = { name: string; message: string };
-
-const acceptedMimes = "image/png,image/jpeg,image/webp,image/avif,image/bmp";
 
 /**
  * Every format starts disabled except WebP, which is what most conversions want.
@@ -91,13 +111,13 @@ export function ImageConverter() {
     [],
   );
 
-  const addFiles = useCallback(async (incoming: FileList | null) => {
-    if (!incoming || incoming.length === 0) return;
+  const addFiles = useCallback(async (incoming: readonly File[]) => {
+    if (incoming.length === 0) return;
 
     const accepted: File[] = [];
     const refused: Rejected[] = [];
 
-    for (const file of Array.from(incoming)) {
+    for (const file of incoming) {
       const size = checkLimits({ bytes: file.size });
       if (!size.ok) {
         refused.push({ name: file.name, message: size.message });
@@ -185,354 +205,330 @@ export function ImageConverter() {
   const failures = outcomes.flatMap((outcome) => (outcome.ok ? [] : [outcome]));
 
   return (
-    <div className="mt-10 space-y-8">
+    <Stack gap="xl" mt="xl">
       <section>
-        <h2 className="text-lg font-medium">1. Add images</h2>
-        <div
-          className="mt-3 rounded-lg border border-dashed p-6"
-          onDragOver={(event) => event.preventDefault()}
-          onDrop={(event) => {
-            event.preventDefault();
-            if (running) return;
-            void addFiles(event.dataTransfer.files);
+        <Title order={2} size="h4">
+          1. Add images
+        </Title>
+
+        {/*
+          No `accept` prop on purpose: it filters by the file's declared type, and
+          a renamed file is exactly what `sniffFormat` is here to catch.
+
+          The drop zone is only the drag target. Clicking and the keyboard go
+          through the FileButton inside it: that is a real `<button>`, so it is
+          announced as one, whereas react-dropzone labels its own root
+          `role="presentation"` — making that the control would mean overriding
+          the role by hand, which is the thing jsx-a11y exists to stop.
+        */}
+        <Dropzone
+          activateOnClick={false}
+          activateOnKeyboard={false}
+          disabled={running}
+          enablePointerEvents
+          mt="sm"
+          multiple
+          onDrop={(dropped) => {
+            void addFiles(dropped);
           }}
+          p="lg"
         >
-          <input
-            accept={acceptedMimes}
-            className="peer sr-only"
-            disabled={running}
-            id="image-files"
-            multiple
-            onChange={(event) => {
-              void addFiles(event.target.files);
-              event.target.value = "";
-            }}
-            type="file"
-          />
-          <label
-            className="flex cursor-pointer flex-col items-center rounded-md px-3 py-2 text-center peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring"
-            htmlFor="image-files"
-          >
-            <span className="font-medium">Choose files</span>
-            <span className="mt-1 text-sm text-muted-foreground">or drop them here</span>
-          </label>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            PNG, JPEG, WebP, AVIF or BMP. Nothing is uploaded — the files stay in this tab.
-          </p>
-        </div>
+          <Stack align="center" gap="sm">
+            <FileButton
+              disabled={running}
+              multiple
+              onChange={(picked) => void addFiles(toFiles(picked))}
+            >
+              {(props) => (
+                <Button {...props} variant="default">
+                  Choose files
+                </Button>
+              )}
+            </FileButton>
+            <Text c="dimmed" size="sm">
+              or drop them here
+            </Text>
+          </Stack>
+        </Dropzone>
+
+        <Text c="dimmed" mt="xs" size="xs">
+          PNG, JPEG, WebP, AVIF or BMP. Nothing is uploaded — the files stay in this tab.
+        </Text>
 
         {files.length > 0 && (
-          <ul className="mt-4 space-y-2">
+          <Stack gap="xs" mt="md">
             {files.map((file, index) => (
-              <li
-                className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-                key={`${file.name}-${index}`}
-              >
-                <span className="truncate">{file.name}</span>
-                <button
-                  className="ml-3 shrink-0 rounded px-2 py-1 text-muted-foreground hover:bg-muted"
-                  disabled={running}
-                  onClick={() => setFiles((previous) => previous.filter((_, at) => at !== index))}
-                  type="button"
-                >
-                  Remove
-                  <span className="sr-only"> {file.name}</span>
-                </button>
-              </li>
+              <Paper key={`${file.name}-${index}`} p="xs" withBorder>
+                <Group justify="space-between" wrap="nowrap">
+                  <Text size="sm" truncate>
+                    {file.name}
+                  </Text>
+                  <CloseButton
+                    aria-label={`Remove ${file.name}`}
+                    disabled={running}
+                    onClick={() => setFiles((previous) => previous.filter((_, at) => at !== index))}
+                  />
+                </Group>
+              </Paper>
             ))}
-          </ul>
+          </Stack>
         )}
 
         {rejected.length > 0 && (
-          <ul className="mt-4 space-y-1 text-sm">
-            {rejected.map((entry) => (
-              <li className="text-destructive" key={entry.name}>
-                <span className="font-medium">{entry.name}</span>: {entry.message}
-              </li>
-            ))}
-          </ul>
+          <Alert color="red" mt="md" title="Some files were not added">
+            <Stack gap={4}>
+              {rejected.map((entry) => (
+                <Text key={entry.name} size="sm">
+                  <Text component="span" fw={500} inherit>
+                    {entry.name}
+                  </Text>
+                  {`: ${entry.message}`}
+                </Text>
+              ))}
+            </Stack>
+          </Alert>
         )}
       </section>
 
       <section>
-        <h2 className="text-lg font-medium">2. Convert to</h2>
-        <fieldset className="mt-3 space-y-4">
-          <legend className="sr-only">Target formats</legend>
+        <Title order={2} size="h4">
+          2. Convert to
+        </Title>
+
+        <Stack gap="md" mt="sm">
           {imageFormats.map((format) => {
             const spec = formatSpecs[format];
             const state = targets[format];
 
             return (
-              <div className="rounded-lg border p-4" key={format}>
-                <div className="flex items-center gap-3">
-                  <input
-                    checked={state.enabled}
-                    disabled={running}
-                    id={`target-${format}`}
-                    onChange={(event) => updateTarget(format, { enabled: event.target.checked })}
-                    type="checkbox"
-                  />
-                  <label className="font-medium" htmlFor={`target-${format}`}>
-                    {spec.label}
-                  </label>
-                  <span className="text-sm text-muted-foreground">.{spec.extension}</span>
-                </div>
+              <Paper key={format} p="md" withBorder>
+                <Checkbox
+                  checked={state.enabled}
+                  disabled={running}
+                  label={`${spec.label} (.${spec.extension})`}
+                  onChange={(event) =>
+                    updateTarget(format, { enabled: event.currentTarget.checked })
+                  }
+                />
 
-                {state.enabled && (
-                  <div className="mt-4 space-y-4 border-l pl-4">
+                <Collapse expanded={state.enabled} keepMounted={false}>
+                  <Stack gap="sm" mt="md" pl="lg">
                     {spec.lossless === "optional" && (
-                      <div className="flex items-center gap-3">
-                        <input
-                          checked={state.lossless}
-                          disabled={running}
-                          id={`lossless-${format}`}
-                          onChange={(event) =>
-                            updateTarget(format, { lossless: event.target.checked })
-                          }
-                          type="checkbox"
-                        />
-                        <label htmlFor={`lossless-${format}`}>Lossless</label>
-                      </div>
+                      <Switch
+                        checked={state.lossless}
+                        disabled={running}
+                        label="Lossless"
+                        onChange={(event) =>
+                          updateTarget(format, { lossless: event.currentTarget.checked })
+                        }
+                      />
                     )}
 
                     {spec.lossless !== "always" && (
                       <div>
-                        <label className="text-sm" htmlFor={`quality-${format}`}>
-                          Quality
-                        </label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            className="w-full disabled:opacity-50"
-                            disabled={running || state.lossless}
-                            id={`quality-${format}`}
-                            max={100}
-                            min={1}
-                            onChange={(event) =>
-                              updateTarget(format, { quality: Number(event.target.value) })
-                            }
-                            type="range"
-                            value={state.quality}
-                          />
-                          <output className="w-10 text-right text-sm tabular-nums">
-                            {state.quality}
-                          </output>
-                        </div>
+                        <Text fw={500} size="sm">
+                          Quality: {state.quality}
+                        </Text>
+                        <Slider
+                          disabled={running || state.lossless}
+                          max={100}
+                          min={1}
+                          mt="xs"
+                          onChange={(value) => updateTarget(format, { quality: value })}
+                          thumbLabel={`${spec.label} quality`}
+                          value={state.quality}
+                        />
                       </div>
                     )}
 
                     <AdvancedPanel
                       fields={advancedFields[format] ?? []}
-                      format={format}
                       onChange={(key, value) =>
                         updateTarget(format, { advanced: { ...state.advanced, [key]: value } })
                       }
                       running={running}
                       values={state.advanced}
                     />
-                  </div>
-                )}
-              </div>
+                  </Stack>
+                </Collapse>
+              </Paper>
             );
           })}
-        </fieldset>
+        </Stack>
       </section>
 
       <section>
-        <h2 className="text-lg font-medium">3. Output</h2>
-        <div className="mt-3 grid gap-4 sm:grid-cols-3">
-          <div>
-            <label className="text-sm" htmlFor="max-edge">
-              Longest edge (px)
-            </label>
-            <input
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              disabled={running}
-              id="max-edge"
-              min={16}
-              onChange={(event) => setMaxEdge(event.target.value)}
-              placeholder="Keep original"
-              type="number"
-              value={maxEdge}
-            />
-          </div>
+        <Title order={2} size="h4">
+          3. Output
+        </Title>
 
-          <div>
-            <label className="text-sm" htmlFor="rotate">
-              Rotate
-            </label>
-            <select
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              disabled={running}
-              id="rotate"
-              onChange={(event) => setRotate(parseRotation(event.target.value))}
-              value={rotate}
-            >
-              {[0, 90, 180, 270].map((degrees) => (
-                <option key={degrees} value={degrees}>
-                  {degrees}°
-                </option>
-              ))}
-            </select>
-          </div>
+        <SimpleGrid cols={{ base: 1, sm: 3 }} mt="sm">
+          <NumberInput
+            description="Leave empty to keep the source size."
+            disabled={running}
+            label="Longest edge (px)"
+            min={16}
+            onChange={(value) => setMaxEdge(typeof value === "number" ? String(value) : value)}
+            placeholder="Keep original"
+            value={maxEdge}
+          />
 
-          <div>
-            <label className="text-sm" htmlFor="background">
-              Background
-            </label>
-            <input
-              className="mt-1 h-10 w-full rounded-md border px-1 disabled:opacity-50"
-              disabled={running || !flattening}
-              id="background"
-              onChange={(event) => setBackground(event.target.value)}
-              type="color"
-              value={background}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Fills transparent pixels for formats without alpha.
-            </p>
-          </div>
-        </div>
+          <Select
+            allowDeselect={false}
+            data={rotationOptions}
+            disabled={running}
+            label="Rotate"
+            onChange={(value) => setRotate(parseRotation(value ?? "0"))}
+            value={String(rotate)}
+          />
+
+          <ColorInput
+            description="Fills transparent pixels for formats without alpha."
+            disabled={running || !flattening}
+            format="hex"
+            label="Background"
+            onChange={setBackground}
+            value={background}
+          />
+        </SimpleGrid>
       </section>
 
-      <section className="flex flex-wrap items-center gap-3">
-        <button
-          className="rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50"
+      <Group>
+        <Button
           disabled={running || files.length === 0 || enabledTargets.length === 0}
           onClick={() => void start()}
-          type="button"
         >
           Convert {files.length > 0 && `${files.length} file${files.length === 1 ? "" : "s"}`}
-        </button>
+        </Button>
         {running && (
-          <button
-            className="rounded-md border px-4 py-2 font-medium"
-            onClick={cancel}
-            type="button"
-          >
+          <Button onClick={cancel} variant="default">
             Cancel
-          </button>
+          </Button>
         )}
-      </section>
+      </Group>
 
-      <section aria-live="polite" className="space-y-4">
+      <section aria-live="polite">
         {planned.length > 0 && (
           <div>
-            <p className="text-sm">
+            <Text size="sm">
               {outcomes.length} of {planned.length} conversions done
-            </p>
-            <progress className="mt-2 w-full" max={planned.length} value={outcomes.length} />
+            </Text>
+            <Progress mt="xs" value={(outcomes.length / planned.length) * 100} />
           </div>
         )}
 
         {failures.length > 0 && (
-          <ul className="space-y-1 text-sm">
-            {failures.map((failure) => (
-              <li className="text-destructive" key={failure.conversion.id}>
-                <span className="font-medium">{failure.conversion.outputName}</span>:{" "}
-                {failure.message}
-              </li>
-            ))}
-          </ul>
+          <Alert color="red" mt="md" title="Some conversions failed">
+            <Stack gap={4}>
+              {failures.map((failure) => (
+                <Text key={failure.conversion.id} size="sm">
+                  <Text component="span" fw={500} inherit>
+                    {failure.conversion.outputName}
+                  </Text>
+                  {`: ${failure.message}`}
+                </Text>
+              ))}
+            </Stack>
+          </Alert>
         )}
 
         {succeeded.length > 0 && (
-          <div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-medium">4. Download</h2>
-              <button
-                className="rounded-md border px-4 py-2 text-sm font-medium"
+          <Stack gap="sm" mt="xl">
+            <Group justify="space-between">
+              <Title order={2} size="h4">
+                4. Download
+              </Title>
+              <Button
                 onClick={() => saveBlob(zipConversions(succeeded), "converted-images.zip")}
-                type="button"
+                variant="default"
               >
                 Download all as ZIP
-              </button>
-            </div>
-            <ul className="mt-3 space-y-2">
+              </Button>
+            </Group>
+
+            <Stack gap="xs">
               {outcomes.flatMap((outcome) =>
                 outcome.ok ? (
-                  <li
-                    className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
-                    key={outcome.conversion.id}
-                  >
-                    <span className="truncate">
-                      {outcome.conversion.outputName}
-                      <span className="ml-2 text-muted-foreground">
-                        {outcome.width}×{outcome.height}
-                      </span>
-                    </span>
-                    <DownloadLink outcome={outcome} />
-                  </li>
+                  <Paper key={outcome.conversion.id} p="xs" withBorder>
+                    <Group justify="space-between" wrap="nowrap">
+                      <Text size="sm" truncate>
+                        {outcome.conversion.outputName}
+                        <Text c="dimmed" component="span" inherit>
+                          {`  ${outcome.width}×${outcome.height}`}
+                        </Text>
+                      </Text>
+                      <DownloadLink outcome={outcome} />
+                    </Group>
+                  </Paper>
                 ) : (
                   []
                 ),
               )}
-            </ul>
-          </div>
+            </Stack>
+          </Stack>
         )}
       </section>
-    </div>
+    </Stack>
   );
 }
 
 function AdvancedPanel({
   fields,
-  format,
   onChange,
   running,
   values,
 }: {
   fields: AdvancedField[];
-  format: ImageFormat;
   onChange: (key: string, value: number | boolean) => void;
   running: boolean;
   values: Record<string, number | boolean>;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
   if (fields.length === 0) return null;
 
   return (
-    <details className="text-sm">
-      <summary className="cursor-pointer">Advanced</summary>
-      <div className="mt-3 space-y-3">
-        {fields.map((field) => {
-          const id = `advanced-${format}-${field.key}`;
-          const value = values[field.key] ?? field.initial;
+    <div>
+      <Button
+        aria-expanded={expanded}
+        onClick={() => setExpanded((open) => !open)}
+        size="compact-sm"
+        variant="subtle"
+      >
+        Advanced
+      </Button>
 
-          return (
-            <div className="flex items-center gap-3" key={field.key}>
-              {field.kind === "boolean" ? (
-                <>
-                  <input
-                    checked={value === true}
-                    disabled={running}
-                    id={id}
-                    onChange={(event) => onChange(field.key, event.target.checked)}
-                    type="checkbox"
-                  />
-                  <label htmlFor={id}>{field.label}</label>
-                </>
-              ) : (
-                <>
-                  <label className="w-56 shrink-0" htmlFor={id}>
-                    {field.label}
-                  </label>
-                  <input
-                    className="w-24 rounded-md border px-2 py-1"
-                    disabled={running}
-                    id={id}
-                    max={field.max}
-                    min={field.min}
-                    onChange={(event) => onChange(field.key, Number(event.target.value))}
-                    step={field.step}
-                    type="number"
-                    value={Number(value)}
-                  />
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </details>
+      <Collapse expanded={expanded} keepMounted={false}>
+        <Stack gap="sm" mt="sm">
+          {fields.map((field) => {
+            const value = values[field.key] ?? field.initial;
+
+            return field.kind === "boolean" ? (
+              <Checkbox
+                checked={value === true}
+                disabled={running}
+                key={field.key}
+                label={field.label}
+                onChange={(event) => onChange(field.key, event.currentTarget.checked)}
+              />
+            ) : (
+              <NumberInput
+                disabled={running}
+                key={field.key}
+                label={field.label}
+                max={field.max}
+                min={field.min}
+                onChange={(next) =>
+                  onChange(field.key, typeof next === "number" ? next : Number(next))
+                }
+                step={field.step}
+                value={Number(value)}
+              />
+            );
+          })}
+        </Stack>
+      </Collapse>
+    </div>
   );
 }
 
@@ -545,14 +541,22 @@ function DownloadLink({ outcome }: { outcome: Extract<Outcome, { ok: true }> }) 
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
 
   return (
-    <a
-      className="shrink-0 rounded px-2 py-1 underline"
-      download={outcome.conversion.outputName}
-      href={url}
-    >
+    <Anchor download={outcome.conversion.outputName} href={url} size="sm">
       Download
-    </a>
+    </Anchor>
   );
+}
+
+const rotationOptions = ["0", "90", "180", "270"].map((degrees) => ({
+  value: degrees,
+  label: `${degrees}°`,
+}));
+
+/** FileButton hands back one file, an array of them, or nothing. */
+function toFiles(picked: File[] | File | null): File[] {
+  if (!picked) return [];
+
+  return Array.isArray(picked) ? picked : [picked];
 }
 
 function saveBlob(blob: Blob, name: string): void {

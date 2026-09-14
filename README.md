@@ -17,7 +17,7 @@ pnpm dev        # http://localhost:3000
 ## Structure
 
 ```
-apps/web/     the App (Next.js App Router, Tailwind CSS v4, shadcn/ui)
+apps/web/     the App (Next.js App Router, Mantine, Tailwind CSS v4)
 packages/     code shared between workspace packages
 docs/adr/     decisions that are hard to reverse
 CONTEXT.md    the vocabulary: Tool, Package, App, Tool Registry
