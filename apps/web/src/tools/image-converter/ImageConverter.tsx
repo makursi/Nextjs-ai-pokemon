@@ -24,14 +24,14 @@ import {
 import { Dropzone } from "@mantine/dropzone";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { advancedFields, type AdvancedField } from "./advanced";
-import { ConversionPool, type Outcome } from "./converter";
-import { formatSpecs, imageFormats, type ImageFormat } from "./formats";
-import type { Rotation } from "./geometry";
-import { checkLimits } from "./limits";
-import type { TargetSettings } from "./options";
-import { planConversions, type PlannedConversion } from "./plan";
-import { sniffByteLength, sniffFormat } from "./sniff";
+import { advancedFields, type AdvancedField } from "./core/advanced";
+import { formatSpecs, imageFormats, type ImageFormat } from "./core/formats";
+import type { Rotation } from "./core/geometry";
+import { checkLimits } from "./core/limits";
+import type { TargetSettings } from "./core/options";
+import { planConversions, type PlannedConversion } from "./core/plan";
+import { sniffByteLength, sniffFormat } from "./core/sniff";
+import { ConversionPool, type Outcome } from "./worker/converter";
 import { zipConversions } from "./zip";
 
 /**

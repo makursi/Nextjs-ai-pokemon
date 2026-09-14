@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { checkLimits, defaultLimits, type LimitResult } from "@/tools/image-converter/limits";
+import { checkLimits, defaultLimits, type LimitResult } from "@/tools/image-converter/core/limits";
 
 /** Narrowing helper: the tests below are all about which failure came back. */
 function failure(result: LimitResult): Extract<LimitResult, { ok: false }> {

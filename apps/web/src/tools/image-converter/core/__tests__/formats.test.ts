@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { formatSpecs, imageFormats } from "@/tools/image-converter/formats";
-import { resolveEncodeOptions } from "@/tools/image-converter/options";
+import { formatSpecs, imageFormats } from "@/tools/image-converter/core/formats";
+import { resolveEncodeOptions } from "@/tools/image-converter/core/options";
 
 describe("the format table", () => {
   it("lists every format exactly once", () => {

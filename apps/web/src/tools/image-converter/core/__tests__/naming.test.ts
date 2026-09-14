@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { outputFileName, stripExtension } from "@/tools/image-converter/naming";
+import { outputFileName, stripExtension } from "@/tools/image-converter/core/naming";
 
 describe("stripExtension", () => {
   it("drops the last extension", () => {

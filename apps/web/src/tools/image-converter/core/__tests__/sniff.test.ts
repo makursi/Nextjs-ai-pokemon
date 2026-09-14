@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { sniffFormat } from "@/tools/image-converter/sniff";
+import { sniffFormat } from "@/tools/image-converter/core/sniff";
 
 function asciiBytes(text: string): number[] {
   const result: number[] = [];

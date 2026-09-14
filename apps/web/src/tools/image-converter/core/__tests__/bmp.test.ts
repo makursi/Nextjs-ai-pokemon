@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { encodeBmp } from "@/tools/image-converter/bmp";
+import { encodeBmp } from "@/tools/image-converter/core/bmp";
 
 /** Two pixels wide, one row: row size is 8 with 2 bytes of padding. */
 const twoByTwo = {

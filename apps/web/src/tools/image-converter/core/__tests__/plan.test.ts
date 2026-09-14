@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import type { ImageFormat } from "@/tools/image-converter/formats";
-import type { TargetSettings } from "@/tools/image-converter/options";
-import { planConversions } from "@/tools/image-converter/plan";
+import type { ImageFormat } from "@/tools/image-converter/core/formats";
+import type { TargetSettings } from "@/tools/image-converter/core/options";
+import { planConversions } from "@/tools/image-converter/core/plan";
 
 function target(format: ImageFormat): TargetSettings {
   return { format, quality: 75, lossless: false };
